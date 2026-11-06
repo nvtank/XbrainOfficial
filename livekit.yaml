@@ -1,0 +1,24 @@
+# LiveKit SFU configuration (development / single host).
+# Production: see deploy/livekit.prod.yaml (domain, TLS TURN, external IP).
+port: 7880
+log_level: info
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 50200
+  # Docker Desktop / local dev: advertise the host's LAN IP automatically
+  use_external_ip: false
+  node_ip: 127.0.0.1
+keys:
+  # key: secret  (secret must be at least 32 characters)
+  devkey: secret_dev_key_change_me_please_32chars
+room:
+  auto_create: true
+  empty_timeout: 300
+  max_participants: 60
+turn:
+  # Embedded TURN for clients behind restrictive NATs (UDP 3478; TLS 5349 needs a cert in production)
+  enabled: true
+  udp_port: 3478
+  relay_range_start: 50201
+  relay_range_end: 50300

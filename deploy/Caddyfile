@@ -1,0 +1,15 @@
+# Production reverse proxy with automatic HTTPS (Let's Encrypt).
+# office.example.com → XBrain app (web + REST + WebSocket game server)
+# voice.example.com  → LiveKit signalling (wss)
+#
+# Replace the domains, point DNS A records to the VPS, then:
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d --build
+
+office.example.com {
+	encode gzip zstd
+	reverse_proxy app:2567
+}
+
+voice.example.com {
+	reverse_proxy livekit:7880
+}

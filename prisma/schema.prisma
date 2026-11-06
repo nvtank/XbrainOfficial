@@ -1,0 +1,84 @@
+// XBrain Virtual Office — PostgreSQL schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String         @id @default(cuid())
+  displayName String
+  role        String         @default("member") // member | admin
+  banned      Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  lastSeenAt  DateTime?
+  avatar      AvatarConfig?
+  sessions    WorkSession[]
+  messages    ChatMessage[]
+  moderation  ModerationAction[]
+}
+
+model AvatarConfig {
+  userId    String   @id
+  config    Json
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OfficeInstance {
+  id        String        @id
+  name      String
+  capacity  Int           @default(50)
+  createdAt DateTime      @default(now())
+  sessions  WorkSession[]
+  messages  ChatMessage[]
+}
+
+/// One continuous "sit at a desk and work" session. Doubles as desk usage history.
+model WorkSession {
+  id        String         @id @default(cuid())
+  userId    String
+  officeId  String
+  deskId    String
+  startedAt DateTime
+  endedAt   DateTime?
+  /// Effective working time (excludes time while disconnected).
+  activeMs  Int            @default(0)
+  endReason String? // stand | disconnect | kicked | server_restart
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  office    OfficeInstance @relation(fields: [officeId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@index([officeId, startedAt])
+  @@index([deskId, startedAt])
+}
+
+/// Stored only when CHAT_PERSIST=true.
+model ChatMessage {
+  id          String         @id @default(cuid())
+  officeId    String
+  channel     String
+  senderId    String
+  recipientId String?
+  text        String
+  createdAt   DateTime       @default(now())
+  sender      User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  office      OfficeInstance @relation(fields: [officeId], references: [id], onDelete: Cascade)
+
+  @@index([officeId, createdAt])
+}
+
+model ModerationAction {
+  id        String    @id @default(cuid())
+  userId    String
+  action    String // kick | mute | unmute
+  reason    String?
+  createdAt DateTime  @default(now())
+  expiresAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}

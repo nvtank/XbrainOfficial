@@ -1,0 +1,233 @@
+{
+  "date": "2026-11-06T03:50:44.367Z",
+  "url": "http://localhost:2571",
+  "clients": 50,
+  "joined": 50,
+  "durationSec": 120,
+  "joinMs": {
+    "p50": 12,
+    "p95": 23
+  },
+  "snapshotsPerClientPerSec": 15,
+  "downKBpsPerClient": 7.3,
+  "downKBpsServerTotal": 365.5,
+  "maxEntitiesPerSnapshot": 49,
+  "pingRttMs": {
+    "p50": 0,
+    "p95": 3,
+    "p99": 5
+  },
+  "snapshotLatencyMs": {
+    "p50": 2,
+    "p95": 5,
+    "p99": 7
+  },
+  "corrections": 1,
+  "sits": 61,
+  "seatConflictsRejected": 27,
+  "chatsSent": 209,
+  "chatsReceived": 6652,
+  "server": {
+    "cpuPercentAvg": 10.5,
+    "cpuPercentMax": 15.9,
+    "rssMBMax": 110.8,
+    "heapMBMax": 32.9,
+    "maxWorking": 17
+  },
+  "errors": [],
+  "errorCount": 0,
+  "samples": [
+    {
+      "t": 5,
+      "cpu": 15,
+      "rss": 97.9,
+      "heap": 26.2,
+      "present": 50,
+      "working": 2
+    },
+    {
+      "t": 10,
+      "cpu": 15.9,
+      "rss": 96.4,
+      "heap": 21.8,
+      "present": 50,
+      "working": 6
+    },
+    {
+      "t": 15,
+      "cpu": 10,
+      "rss": 96.8,
+      "heap": 21.2,
+      "present": 50,
+      "working": 11
+    },
+    {
+      "t": 20,
+      "cpu": 11.3,
+      "rss": 97.5,
+      "heap": 23.9,
+      "present": 50,
+      "working": 17
+    },
+    {
+      "t": 25,
+      "cpu": 7.5,
+      "rss": 96.8,
+      "heap": 22.4,
+      "present": 50,
+      "working": 16
+    },
+    {
+      "t": 30,
+      "cpu": 8.8,
+      "rss": 108,
+      "heap": 26.1,
+      "present": 50,
+      "working": 16
+    },
+    {
+      "t": 35,
+      "cpu": 12.2,
+      "rss": 109,
+      "heap": 31.8,
+      "present": 50,
+      "working": 13
+    },
+    {
+      "t": 40,
+      "cpu": 10.6,
+      "rss": 108.8,
+      "heap": 27.1,
+      "present": 50,
+      "working": 11
+    },
+    {
+      "t": 45,
+      "cpu": 12.2,
+      "rss": 108.2,
+      "heap": 23.1,
+      "present": 50,
+      "working": 12
+    },
+    {
+      "t": 50,
+      "cpu": 9.4,
+      "rss": 109.7,
+      "heap": 31.7,
+      "present": 50,
+      "working": 10
+    },
+    {
+      "t": 55,
+      "cpu": 9.7,
+      "rss": 109.5,
+      "heap": 26.9,
+      "present": 50,
+      "working": 13
+    },
+    {
+      "t": 60,
+      "cpu": 8.4,
+      "rss": 109.7,
+      "heap": 32.8,
+      "present": 50,
+      "working": 13
+    },
+    {
+      "t": 65,
+      "cpu": 9.1,
+      "rss": 109.3,
+      "heap": 26.9,
+      "present": 50,
+      "working": 14
+    },
+    {
+      "t": 70,
+      "cpu": 8.1,
+      "rss": 109.8,
+      "heap": 31.2,
+      "present": 50,
+      "working": 16
+    },
+    {
+      "t": 75,
+      "cpu": 10,
+      "rss": 108.9,
+      "heap": 23.1,
+      "present": 50,
+      "working": 15
+    },
+    {
+      "t": 80,
+      "cpu": 10.3,
+      "rss": 109.9,
+      "heap": 26.3,
+      "present": 50,
+      "working": 17
+    },
+    {
+      "t": 85,
+      "cpu": 9.7,
+      "rss": 110,
+      "heap": 31.9,
+      "present": 50,
+      "working": 15
+    },
+    {
+      "t": 90,
+      "cpu": 8.1,
+      "rss": 109.9,
+      "heap": 26.3,
+      "present": 50,
+      "working": 12
+    },
+    {
+      "t": 95,
+      "cpu": 11.2,
+      "rss": 109.9,
+      "heap": 22.5,
+      "present": 50,
+      "working": 9
+    },
+    {
+      "t": 100,
+      "cpu": 11.5,
+      "rss": 110.3,
+      "heap": 30.5,
+      "present": 50,
+      "working": 12
+    },
+    {
+      "t": 105,
+      "cpu": 13.1,
+      "rss": 110.1,
+      "heap": 26,
+      "present": 50,
+      "working": 11
+    },
+    {
+      "t": 110,
+      "cpu": 13.4,
+      "rss": 110.8,
+      "heap": 32.9,
+      "present": 50,
+      "working": 14
+    },
+    {
+      "t": 115,
+      "cpu": 9,
+      "rss": 110.3,
+      "heap": 25.2,
+      "present": 50,
+      "working": 15
+    },
+    {
+      "t": 120,
+      "cpu": 8.1,
+      "rss": 110.8,
+      "heap": 31.4,
+      "present": 50,
+      "working": 17
+    }
+  ]
+}

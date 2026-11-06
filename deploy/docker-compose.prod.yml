@@ -1,0 +1,38 @@
+# Production overrides (VPS). Use together with the base file:
+#   docker compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d --build
+services:
+  postgres:
+    ports: !reset []
+  redis:
+    ports: !reset []
+
+  livekit:
+    volumes:
+      - ./deploy/livekit.prod.yaml:/etc/livekit.yaml:ro
+    network_mode: host   # LiveKit needs the host network for UDP media in production
+    ports: !reset []
+
+  app:
+    ports: !reset []
+    environment:
+      CORS_ORIGIN: https://office.example.com
+      LIVEKIT_URL: wss://voice.example.com
+      LIVEKIT_HOST: http://host.docker.internal:7880
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    extra_hosts:
+      - "livekit:host-gateway"
+
+volumes:
+  caddy_data:

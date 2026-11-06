@@ -1,0 +1,32 @@
+{
+  "name": "xbrain-virtual-office",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "XBrain Virtual Office — Connect • Work • Collaborate. 3D multiplayer virtual office (React Three Fiber + Colyseus + LiveKit).",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n server,web -c magenta,cyan \"npm run dev -w @xbrain/server\" \"npm run dev -w @xbrain/web\"",
+    "dev:server": "npm run dev -w @xbrain/server",
+    "dev:web": "npm run dev -w @xbrain/web",
+    "build": "npm run build -w @xbrain/web && npm run build -w @xbrain/server",
+    "start": "npm run start -w @xbrain/server",
+    "typecheck": "npm run typecheck -w @xbrain/shared && npm run typecheck -w @xbrain/server && npm run typecheck -w @xbrain/web",
+    "db:generate": "prisma generate --schema prisma/schema.prisma",
+    "db:push": "prisma db push --schema prisma/schema.prisma",
+    "db:migrate": "prisma migrate deploy --schema prisma/schema.prisma",
+    "loadtest": "npm run loadtest -w @xbrain/server --",
+    "postinstall": "prisma generate --schema prisma/schema.prisma"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prisma": "5.22.0",
+    "typescript": "~5.6.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

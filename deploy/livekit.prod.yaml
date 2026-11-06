@@ -1,0 +1,25 @@
+# LiveKit production config (VPS with a public IP).
+# Open firewall: TCP 7881, UDP 50000-60000, UDP 3478, TCP 5349 (TURN/TLS).
+port: 7880
+log_level: info
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 60000
+  use_external_ip: true
+keys:
+  # Generate with: docker run --rm livekit/livekit-server generate-keys
+  REPLACE_WITH_API_KEY: REPLACE_WITH_API_SECRET_AT_LEAST_32_CHARS
+room:
+  auto_create: true
+  empty_timeout: 300
+  max_participants: 60
+turn:
+  enabled: true
+  domain: turn.example.com
+  tls_port: 5349
+  udp_port: 3478
+  # Point cert_file/key_file to a certificate for turn.example.com (or terminate TLS at a load balancer
+  # and set external_tls: true).
+  cert_file: /etc/livekit/turn.crt
+  key_file: /etc/livekit/turn.key

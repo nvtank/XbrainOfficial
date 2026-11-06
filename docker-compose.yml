@@ -1,0 +1,87 @@
+# XBrain Virtual Office — full stack for development / single-host deployment.
+#
+#   docker compose up -d --build        → http://localhost:2567
+#
+# Services: PostgreSQL (data), Redis (presence, optional), LiveKit SFU (voice, with embedded TURN),
+# and the app (Colyseus game server + REST API + built web client).
+name: xbrain-virtual-office
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: xbrain
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-xbrain}
+      POSTGRES_DB: xbrain
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xbrain -d xbrain"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  livekit:
+    image: livekit/livekit-server:v1.8.4
+    restart: unless-stopped
+    command: --config /etc/livekit.yaml
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "7880:7880"          # signalling (WebSocket) + HTTP API
+      - "7881:7881"          # WebRTC over TCP fallback
+      - "3478:3478/udp"      # embedded TURN/UDP
+      - "50000-50200:50000-50200/udp"  # WebRTC media
+      - "50201-50300:50201-50300/udp"  # TURN relay
+
+  app:
+    build:
+      context: .
+      args:
+        VITE_SERVER_URL: ${VITE_SERVER_URL:-}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      livekit:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      SERVER_PORT: 2567
+      DATABASE_URL: postgresql://xbrain:${POSTGRES_PASSWORD:-xbrain}@postgres:5432/xbrain?schema=public
+      STRICT_DB: "true"
+      # Redis presence is only needed when running several game-server processes.
+      REDIS_URL: ${REDIS_URL:-}
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production-please}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      OFFICE_ID: ${OFFICE_ID:-xbrain-danang}
+      OFFICE_NAME: ${OFFICE_NAME:-XBrain Đà Nẵng}
+      OFFICE_CAPACITY: ${OFFICE_CAPACITY:-50}
+      ALLOW_TELEPORT: ${ALLOW_TELEPORT:-false}
+      WORK_STAND_MODE: ${WORK_STAND_MODE:-stop}
+      CHAT_PERSIST: ${CHAT_PERSIST:-false}
+      # Browser-facing LiveKit URL (must be reachable from the user's browser)
+      LIVEKIT_URL: ${LIVEKIT_URL:-ws://localhost:7880}
+      # Server-to-server URL for moderation (inside the compose network)
+      LIVEKIT_HOST: http://livekit:7880
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret_dev_key_change_me_please_32chars}
+    ports:
+      - "2567:2567"
+    volumes:
+      - appdata:/app/apps/server/data
+
+volumes:
+  pgdata:
+  appdata:
