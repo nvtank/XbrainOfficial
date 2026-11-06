@@ -7,7 +7,7 @@ export type TimeOfDay = 'auto' | 'day' | 'sunset' | 'night';
 
 export const KEY_ACTIONS = [
   'forward', 'back', 'left', 'right', 'run', 'jump', 'interact', 'secondary', 'camera', 'map', 'chat', 'menu',
-  'ptt', 'mic', 'emote', 'dashboard', 'hideUi', 'perf',
+  'ptt', 'mic', 'emote', 'dashboard', 'leaderboard', 'hideUi', 'perf',
 ] as const;
 export type KeyAction = (typeof KEY_ACTIONS)[number];
 
@@ -28,6 +28,7 @@ export const KEY_ACTION_LABELS: Record<KeyAction, string> = {
   mic: 'Toggle microphone',
   emote: 'Emotes',
   dashboard: 'Office status dashboard',
+  leaderboard: 'Leaderboard (Hall of Fame)',
   hideUi: 'Hide UI (photo mode)',
   perf: 'Performance monitor',
 };
@@ -49,6 +50,7 @@ export const DEFAULT_KEYS: Record<KeyAction, string> = {
   mic: 'KeyT',
   emote: 'KeyG',
   dashboard: 'KeyB',
+  leaderboard: 'KeyL',
   hideUi: 'KeyH',
   perf: 'Backquote',
 };

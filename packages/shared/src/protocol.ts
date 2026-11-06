@@ -119,6 +119,26 @@ export interface KioskDisplay {
   already: boolean;
 }
 
+export type LeaderboardPeriod = 'today' | 'week' | 'month';
+
+export interface LeaderboardEntry {
+  userId: string;
+  name: string;
+  /** Work time in the period (ms), including the running session at `at`. */
+  ms: number;
+  sessions: number;
+  /** Currently working → clients add (now - at) live. */
+  working: boolean;
+}
+
+/** Replicated as JSON in OfficeState.leaderboard. */
+export interface LeaderboardData {
+  at: number;
+  today: LeaderboardEntry[];
+  week: LeaderboardEntry[];
+  month: LeaderboardEntry[];
+}
+
 export interface InteractMsg {
   id: string;
   /** Optional action: 'next' for the TV slide. */

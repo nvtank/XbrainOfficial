@@ -134,6 +134,13 @@ class Network {
     $.listen('activeWeek', (v: number) => useWorld.getState().set({ activeWeek: v }));
     $.listen('lateAfter', (v: number) => useWorld.getState().set({ lateAfter: v }));
     $.listen('attendanceDay', (v: string) => useWorld.getState().set({ attendanceDay: v }));
+    $.listen('leaderboard', (v: string) => {
+      try {
+        useWorld.getState().set({ leaderboard: v ? JSON.parse(v) : null });
+      } catch {
+        /* ignore malformed payload */
+      }
+    });
 
     room.onMessage(S2C.Snapshot, (m: SnapshotMsg) => {
       const t = Number(m.t);

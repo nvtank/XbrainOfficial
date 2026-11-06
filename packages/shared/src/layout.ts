@@ -53,7 +53,7 @@ export const ZONES: ZoneDef[] = [
   { id: 'lobby', name: 'Reception', nameVi: 'Lễ tân', rect: rect(-7, 7, 0.15, 6.85), enclosed: false, floor: 'tile', mapColor: '#4a4f5a', navigable: true },
   { id: 'storage', name: 'Storage & Lockers', nameVi: 'Kệ · Tủ', rect: rect(WX, -7, -4.4, 0), enclosed: false, floor: 'tile', mapColor: '#6b6152', navigable: true },
   { id: 'meeting', name: 'Meeting Room', nameVi: 'Phòng họp', rect: rect(WX, -7.1, -11.9, -4.6), enclosed: true, floor: 'meetingCarpet', mapColor: '#3e6b4f', navigable: true },
-  { id: 'kitchen', name: 'Pantry / Kitchen', nameVi: 'Phòng bếp', rect: rect(WX, -7.1, -18.9, -12.1), enclosed: true, floor: 'kitchenTile', mapColor: '#8a5a2b', navigable: true },
+  { id: 'kitchen', name: 'Open Pantry', nameVi: 'Bếp (khu mở)', rect: rect(WX, -7.1, -18.9, -12.1), enclosed: false, floor: 'kitchenTile', mapColor: '#8a5a2b', navigable: true },
   { id: 'director', name: 'Director Office', nameVi: 'Phòng giám đốc', rect: rect(WX, -7.1, -30, -19.1), enclosed: true, floor: 'marble', mapColor: '#3d5a80', navigable: true },
   { id: 'corridor', name: 'Left Corridor', nameVi: 'Lối trái', rect: rect(-7, -4.5, -30, 0.15), enclosed: false, floor: 'tile', mapColor: '#555b66', navigable: false },
   { id: 'workspace', name: 'Main Workspace', nameVi: 'Khu làm việc', rect: rect(-4.5, 12, -28, 0), enclosed: false, floor: 'carpet', mapColor: '#2f3c4f', navigable: true },
@@ -140,17 +140,17 @@ export const WALLS: WallDef[] = [
   wz('w-corr-e', 16.1, 7, 14.2, 'corridor', { height: FACADE_HEIGHT }),
   // Functional rooms (left column)
   wx('w-storage-meeting', -4.5, WX - 0.2, -7, 'white'),
-  wz('w-meeting-e', -7.05, -12, -4.4, 'glass', {
-    thickness: 0.1,
+  // Private rooms: solid walls + doors (closed rooms block sight, voice and nearby chat)
+  wz('w-meeting-e', -7.05, -12, -4.4, 'white', {
     openings: [{ from: -6.25, to: -5.15, height: DOOR_HEIGHT, doorId: 'door-meeting' }],
   }),
   wx('w-meeting-kitchen', -12, WX - 0.2, -7, 'white'),
+  // Open pantry: wide opening to the corridor, only short wall ends and a header beam
   wz('w-kitchen-e', -7.05, -19, -12, 'white', {
-    openings: [{ from: -13.75, to: -12.65, height: DOOR_HEIGHT, doorId: 'door-kitchen' }],
+    openings: [{ from: -18.4, to: -12.6, height: 2.7 }],
   }),
   wx('w-kitchen-director', -19, WX - 0.2, -7, 'white'),
-  wz('w-director-e', -7.05, -30, -19, 'frosted', {
-    thickness: 0.1,
+  wz('w-director-e', -7.05, -30, -19, 'white', {
     openings: [{ from: -21.35, to: -20.15, height: DOOR_HEIGHT, doorId: 'door-director' }],
   }),
 ];
@@ -205,9 +205,8 @@ export interface DoorDef {
 }
 
 export const DOORS: DoorDef[] = [
-  { id: 'door-meeting', label: 'Meeting Room Door', hinge: { x: -7.05, z: -5.15 }, axis: 'z', width: 1.1, dir: -1, swing: HALF * 0.95, style: 'glass', zones: ['meeting', 'corridor'] },
-  { id: 'door-kitchen', label: 'Kitchen Door', hinge: { x: -7.05, z: -12.65 }, axis: 'z', width: 1.1, dir: -1, swing: HALF * 0.95, style: 'wood', zones: ['kitchen', 'corridor'] },
-  { id: 'door-director', label: 'Director Office Door', hinge: { x: -7.05, z: -20.15 }, axis: 'z', width: 1.2, dir: -1, swing: HALF * 0.95, style: 'glass', zones: ['director', 'corridor'] },
+  { id: 'door-meeting', label: 'Meeting Room Door', hinge: { x: -7.05, z: -5.15 }, axis: 'z', width: 1.1, dir: -1, swing: HALF * 0.95, style: 'wood', zones: ['meeting', 'corridor'] },
+  { id: 'door-director', label: 'Director Office Door', hinge: { x: -7.05, z: -20.15 }, axis: 'z', width: 1.2, dir: -1, swing: HALF * 0.95, style: 'wood', zones: ['director', 'corridor'] },
 ];
 
 /** Automatic sliding entrance door (opens locally when any avatar is near; no server state). */
@@ -405,6 +404,7 @@ export type FurnitureType =
   | 'statusScreen'
   | 'welcomeScreen'
   | 'attendanceScreen'
+  | 'leaderboard'
   | 'kiosk'
   | 'cctv'
   | 'poster'
@@ -458,7 +458,10 @@ export const FURNITURE: FurnitureDef[] = [
   f('ws-plant-4', 'tallPlant', 11.45, -29.4, 0, 0.5, 0.5, 1.8, 'lounge', { collider: true }),
   f('ws-plant-5', 'plant', 3.5, -29.5, 0, 0.45, 0.45, 1.1, 'lounge', { collider: true }),
   f('ws-plant-6', 'tallPlant', 11.45, -0.6, 0, 0.5, 0.5, 1.8, 'workspace', { collider: true }),
-  f('ws-plant-7', 'tallPlant', 11.5, -14.8, 0, 0.5, 0.5, 1.8, 'workspace', { collider: true }),
+  f('ws-plant-7', 'tallPlant', 11.45, -11.7, 0, 0.5, 0.5, 1.8, 'workspace', { collider: true }),
+  f('ws-plant-8', 'tallPlant', 11.45, -18.3, 0, 0.5, 0.5, 1.8, 'workspace', { collider: true }),
+  f('poster-mission', 'poster', 11.97, -8.0, -HALF, 1.2, 0.03, 1.6, 'workspace', { y: 1.8, variant: 'mission' }),
+  f('poster-values', 'poster', 11.97, -22.0, -HALF, 1.2, 0.03, 1.6, 'workspace', { y: 1.8, variant: 'values' }),
   f('ws-fan-1', 'wallFan', -3.1, -0.2, PI, 0.5, 0.3, 0.5, 'workspace', { y: 2.7 }),
   f('ws-fan-2', 'wallFan', 3.1, -0.2, PI, 0.5, 0.3, 0.5, 'workspace', { y: 2.7 }),
   f('ws-fan-3', 'wallFan', 11.95, -10, -HALF, 0.5, 0.3, 0.5, 'workspace', { y: 2.7 }),
@@ -466,8 +469,8 @@ export const FURNITURE: FurnitureDef[] = [
   // East wall accents (solid wall: wood slats + posters + mural)
   f('east-slats-1', 'woodSlats', 11.97, -5.5, -HALF, 4.0, 0.06, 3.0, 'workspace', { y: 0.35 }),
   f('east-slats-2', 'woodSlats', 11.97, -24.5, -HALF, 4.0, 0.06, 3.0, 'workspace', { y: 0.35 }),
-  f('poster-mission', 'poster', 11.97, -12.5, -HALF, 1.4, 0.03, 1.9, 'workspace', { y: 1.75, variant: 'mission' }),
-  f('poster-values', 'poster', 11.97, -17.5, -HALF, 1.4, 0.03, 1.9, 'workspace', { y: 1.75, variant: 'values' }),
+  // Hall of Fame: big LED leaderboard of the hardest-working people
+  f('leaderboard', 'leaderboard', 11.93, -15, -HALF, 5.2, 0.12, 2.9, 'workspace', { y: 2.1 }),
   f('poster-mural', 'poster', 11.97, -5.5, -HALF, 3.0, 0.03, 1.4, 'workspace', { y: 2.1, variant: 'mural' }),
   f('poster-team', 'poster', 11.97, -24.5, -HALF, 3.0, 0.03, 1.4, 'workspace', { y: 2.1, variant: 'team' }),
   f('poster-south', 'poster', 9.6, -0.03, PI, 1.6, 0.03, 1.0, 'workspace', { y: 1.8, variant: 'focus' }),
@@ -535,8 +538,8 @@ export const FURNITURE: FurnitureDef[] = [
   f('kitchen-pendant-1', 'pendant', -10.6, -14.7, 0, 0.35, 0.35, 0.3, 'kitchen', { y: 2.6, variant: 'dome' }),
   f('kitchen-pendant-2', 'pendant', -10.6, -17.4, 0, 0.35, 0.35, 0.3, 'kitchen', { y: 2.6, variant: 'dome' }),
   f('kitchen-plant', 'plant', -12.6, -18.62, 0, 0.45, 0.45, 1.0, 'kitchen', { collider: true }),
-  f('kitchen-poster', 'poster', -7.16, -16.0, -HALF, 1.1, 0.03, 1.5, 'kitchen', { y: 1.7, variant: 'pantry' }),
-  f('kitchen-sign', 'sign', -6.94, -15.5, HALF, 1.0, 0.03, 0.28, 'corridor', { y: 2.65, variant: 'pantry' }),
+  f('kitchen-poster', 'poster', -9.2, -12.12, PI, 1.1, 0.03, 1.5, 'kitchen', { y: 1.7, variant: 'pantry' }),
+  f('kitchen-sign', 'sign', -6.94, -15.5, HALF, 1.6, 0.03, 0.42, 'corridor', { y: 3.2, variant: 'pantry' }),
 
   // Director office (premium)
   f('director-desk', 'directorDesk', MX, -27.2, 0, 2.6, 1.05, 0.76, 'director', { collider: true }),
@@ -686,6 +689,7 @@ export const CAMERA_PRESETS: CameraPreset[] = [
   { id: 'meeting', label: 'Meeting Room Camera', position: [-7.55, 3.4, -4.95], target: [-11.6, 0.8, -9.5], zone: 'meeting', group: 'room' },
   { id: 'kitchen', label: 'Kitchen Camera', position: [-7.55, 3.4, -12.45], target: [-12.8, 0.8, -16.8], zone: 'kitchen', group: 'room' },
   { id: 'director', label: 'Director Office Camera', position: [-7.6, 3.4, -19.5], target: [-12.2, 0.8, -26.5], zone: 'director', group: 'room' },
+  { id: 'leaderboard', label: 'Hall of Fame (Leaderboard)', position: [5.2, 2.0, -15], target: [12, 2.0, -15], zone: 'workspace', group: 'room' },
   { id: 'storage', label: 'Storage Camera', position: [-5.2, 3.2, -0.4], target: [-12.5, 1, -2.6], zone: 'storage', group: 'room' },
   { id: 'bridge', label: 'Thuận Phước Bridge View', position: [3.5, 1.65, -28.6], target: [3.5, -4.5, -200], zone: 'lounge', group: 'room' },
   { id: 'overview', label: 'Office Overview', position: [0, 48, 30], target: [-1.5, 0, -12], hideCeiling: true },
@@ -744,7 +748,7 @@ export const NAV_EDGES: Array<[string, string]> = [
   ['OUT', 'ENT'], ['ENT', 'DOOR'], ['DOOR', 'LOB'], ['LOB', 'LOBL'], ['LOB', 'LOBR'], ['LOBL', 'AL'], ['LOBR', 'AR'],
   ['LOB', 'CHK'], ['CHK', 'LOBL'],
   ['AL', 'CST'], ['CST', 'ST'], ['CST', 'CMEET'], ['CMEET', 'MD'], ['MD', 'M'], ['CMEET', 'CKIT'], ['CKIT', 'KD'], ['KD', 'K'],
-  ['CKIT', 'CDIR'], ['CDIR', 'DD'], ['DD', 'D'], ['CDIR', 'CEND'],
+  ['CKIT', 'K'], ['CKIT', 'CDIR'], ['CDIR', 'DD'], ['DD', 'D'], ['CDIR', 'CEND'],
   ['AL', 'WL0'], ['AR', 'WF'], ['AR', 'WR0'], ['WF', 'WL0'], ['WF', 'WR0'],
   ['WL0', 'WL1'], ['WL1', 'WL2'], ['WL2', 'WL3'], ['WL3', 'WL4'], ['WL4', 'WL5'],
   ['WR0', 'WR1'], ['WR1', 'WR2'], ['WR2', 'WR3'], ['WR3', 'WR4'], ['WR4', 'WR5'],
@@ -767,3 +771,20 @@ export const ROOM_NAV_TARGET: Partial<Record<ZoneId, string>> = {
 
 /** World bounds of everything walkable (for minimap framing). */
 export const MAP_BOUNDS: Rect = rect(-16.5, 16.5, -30.6, 14.4);
+
+/** Door that connects a private room to the corridor. */
+export const DOOR_OF_ZONE: Partial<Record<ZoneId, string>> = Object.fromEntries(DOORS.map((d) => [d.zones[0], d.id]));
+
+/**
+ * Private rooms (meeting, director) are sound-proof: nothing passes between a closed
+ * room and the outside unless its door is open. Open areas always hear each other.
+ */
+export function zonesConnected(a: ZoneId | null, b: ZoneId | null, objects: (id: string) => number | undefined): boolean {
+  if (!a || !b || a === b) return true;
+  const ea = ZONE_BY_ID[a]?.enclosed;
+  const eb = ZONE_BY_ID[b]?.enclosed;
+  if (!ea && !eb) return true;
+  if (ea && eb) return false;
+  const door = DOOR_OF_ZONE[ea ? a : b];
+  return !!door && (objects(door) ?? 0) > 0;
+}

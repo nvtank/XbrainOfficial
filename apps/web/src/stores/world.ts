@@ -1,6 +1,6 @@
 /** UI-facing mirror of the replicated office state (updated in batches from the network layer). */
 import { create } from 'zustand';
-import { sanitizeAvatar, type AvatarConfig, type StatsMsg, type ZoneId } from '@xbrain/shared';
+import { sanitizeAvatar, type AvatarConfig, type LeaderboardData, type StatsMsg, type ZoneId } from '@xbrain/shared';
 
 export interface PlayerView {
   sid: string;
@@ -44,6 +44,7 @@ interface WorldState {
   attendanceDay: string;
   activeWeek: number;
   lateAfter: number;
+  leaderboard: LeaderboardData | null;
   set: (patch: Partial<WorldState>) => void;
   reset: () => void;
 }
@@ -64,6 +65,7 @@ const empty = {
   attendanceDay: '',
   activeWeek: 0,
   lateAfter: 540,
+  leaderboard: null,
 };
 
 export const useWorld = create<WorldState>((set) => ({

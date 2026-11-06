@@ -50,6 +50,8 @@ export interface Store {
   /** Sum of work time for sessions started since `since`. closedOnly excludes running sessions. */
   workTotals(userId: string, since: Date, closedOnly?: boolean): Promise<WorkTotals>;
   recentWorkSessions(officeId: string, limit: number): Promise<Array<WorkSessionRecord & { displayName: string }>>;
+  /** Closed work time per user since a date (leaderboard), highest first. */
+  workLeaderboard(officeId: string, since: Date, limit: number): Promise<Array<{ userId: string; displayName: string; totalMs: number; sessions: number }>>;
   closeDanglingSessions(reason: string): Promise<number>;
   saveChat(data: { officeId: string; channel: string; senderId: string; recipientId?: string; text: string }): Promise<void>;
   addModeration(data: { userId: string; action: string; reason?: string; expiresAt?: Date }): Promise<void>;
@@ -195,6 +197,21 @@ export class MemoryStore implements Store {
     return { totalMs, sessions };
   }
 
+  async workLeaderboard(officeId: string, since: Date, limit: number) {
+    const agg = new Map<string, { totalMs: number; sessions: number }>();
+    for (const s of Object.values(this.data.sessions)) {
+      if (s.officeId !== officeId || !s.endedAt || new Date(s.startedAt) < since) continue;
+      const a = agg.get(s.userId) ?? { totalMs: 0, sessions: 0 };
+      a.totalMs += s.activeMs;
+      a.sessions++;
+      agg.set(s.userId, a);
+    }
+    return [...agg.entries()]
+      .map(([userId, a]) => ({ userId, displayName: this.data.users[userId]?.displayName ?? '?', ...a }))
+      .sort((x, y) => y.totalMs - x.totalMs)
+      .slice(0, limit);
+  }
+
   async recentWorkSessions(officeId: string, limit: number) {
     return Object.values(this.data.sessions)
       .filter((s) => s.officeId === officeId)
@@ -331,6 +348,20 @@ export class PrismaStore implements Store {
     if (closedOnly) where.endedAt = { not: null };
     const r = await this.prisma.workSession.aggregate({ where, _sum: { activeMs: true }, _count: true });
     return { totalMs: r._sum.activeMs ?? 0, sessions: r._count ?? 0 };
+  }
+
+  async workLeaderboard(officeId: string, since: Date, limit: number) {
+    const rows = await this.prisma.workSession.groupBy({
+      by: ['userId'],
+      where: { officeId, startedAt: { gte: since }, endedAt: { not: null } },
+      _sum: { activeMs: true },
+      _count: { _all: true },
+      orderBy: { _sum: { activeMs: 'desc' } },
+      take: limit,
+    });
+    const users = await this.prisma.user.findMany({ where: { id: { in: rows.map((r: AnyPrisma) => r.userId) } }, select: { id: true, displayName: true } });
+    const names = new Map(users.map((u: AnyPrisma) => [u.id, u.displayName]));
+    return rows.map((r: AnyPrisma) => ({ userId: r.userId, displayName: (names.get(r.userId) as string) ?? '?', totalMs: r._sum.activeMs ?? 0, sessions: r._count._all ?? 0 }));
   }
 
   async recentWorkSessions(officeId: string, limit: number) {

@@ -54,4 +54,6 @@ export class OfficeState extends Schema {
   @type('uint16') activeWeek = 0;
   /** Late threshold, minutes after local midnight. */
   @type('uint16') lateAfter = 540;
+  /** JSON LeaderboardData (top workers today / this week / this month). */
+  @type('string') leaderboard = '';
 }

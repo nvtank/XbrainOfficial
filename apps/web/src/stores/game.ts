@@ -65,6 +65,7 @@ interface GameState {
   /** First-run interactive tutorial and the controls cheat sheet. */
   tutorialOpen: boolean;
   helpOpen: boolean;
+  leaderboardOpen: boolean;
   toasts: Toast[];
   set: (patch: Partial<GameState>) => void;
   toast: (level: Toast['level'], text: string, title?: string) => void;
@@ -102,6 +103,7 @@ export const useGame = create<GameState>((set, get) => ({
   checkin: { phase: 'idle' },
   tutorialOpen: false,
   helpOpen: false,
+  leaderboardOpen: false,
   toasts: [],
   set: (patch) => set(patch),
   toast: (level, text, title) => {
@@ -118,6 +120,6 @@ export const useGame = create<GameState>((set, get) => ({
     })),
   anyModal: () => {
     const s = get();
-    return s.settingsOpen || s.mapOpen || s.computerOpen || !!s.whiteboardOpen || s.chatFocused || s.helpOpen || s.checkin.phase !== 'idle';
+    return s.settingsOpen || s.mapOpen || s.computerOpen || !!s.whiteboardOpen || s.chatFocused || s.helpOpen || s.leaderboardOpen || s.checkin.phase !== 'idle';
   },
 }));

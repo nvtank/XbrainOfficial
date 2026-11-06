@@ -18,12 +18,14 @@ Tài liệu kỹ thuật: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (kiến t
 
 **Không gian 3D** (trần cao 4 m, cầu Thuận Phước nằm **thẳng phía trước** qua vách kính phía bắc, tường bên phải là tường đặc có ốp gỗ & poster)
 - **Điểm danh Face ID** bên trái vách logo lễ tân + **Attendance Dashboard** trên tường: có mặt hôm nay, đang làm việc, online, đi trễ, vắng, danh sách giờ check-in, tiến độ. Lưu bảng `Attendance` (mỗi người 1 lần/ngày, trễ sau `ATTENDANCE_LATE_AFTER`).
+- **Bảng vàng "XBrain Hall of Fame"**: màn LED lớn 5,2 × 2,9 m trên tường đặc phía đông khu làm việc, xếp hạng top 10 người làm việc chăm chỉ nhất (Hôm nay / Tuần này / Tháng này, tự xoay vòng 10 s) — bục podium 🥇🥈🥉, thanh tiến độ, đồng hồ chạy trực tiếp cho người đang làm. Dữ liệu tính trên **server** từ các phiên làm việc đã lưu + phiên đang chạy (cập nhật mỗi 15 s và ngay khi ai đó đứng dậy). Xem chi tiết bằng phím **L** / nút **Top** (highlight vị trí của bạn), hoặc camera preset *Hall of Fame*.
+- **Phòng họp & phòng giám đốc là phòng kín**: tường đặc, cửa gỗ đóng/mở bằng E. Khi cửa đóng, âm thanh **bị chặn hoàn toàn** (voice) và chat *Nearby* không lọt ra/vào; mở cửa thì nghe nhỏ dần qua cửa. **Bếp là khu công khai**: không cửa, mặt tiền mở rộng 5,8 m ra hành lang — ai ở gần đều nghe & chat được.
 - **10 camera an ninh CCTV** gắn tường (lối vào, lễ tân, 4 góc khu làm việc, hành lang các phòng) — xem được trong menu Camera → Security cameras.
 - Phòng bếp đầy đủ: tủ lạnh, lò vi sóng, máy cà phê, bình nước, kệ đồ ăn vặt (bánh mì, mì ly, nước, giỏ trái cây), đĩa cốc, bàn ăn có đồ ăn. Phòng giám đốc cao cấp: sàn đá cẩm thạch, bàn gỗ óc chó viền đồng, máy kiểu iMac, kệ sách & tủ trưng bày có đèn LED, sofa da, bàn trà đá, đèn chùm, vách ốp gỗ, tranh.
 - Hành lang tòa nhà với **logo XBrain 3D** trên mặt tiền (logo thật được vector hoá & đùn khối, giữ nguyên gradient), cửa kính trượt tự động.
 - Sảnh lễ tân: bàn lễ tân + 2 ghế, **vách đen logo nổi có LED**, lối trái/lối phải, sofa chờ, màn hình chào live.
 - **5 cụm bàn nằm ngang × 10 bàn = 50 chỗ**, mỗi chỗ có ghế, màn hình (sáng khi có người ngồi), bàn phím, chuột.
-- Dãy phòng bên trái (từ cửa vào trong): kệ · tủ (tủ đồ mở được) → phòng họp kính (10 ghế, TV trình chiếu, bảng trắng dùng chung) → phòng bếp (tủ lạnh, tủ, máy pha cà phê, bình nước) → phòng giám đốc (rộng nhất, sofa, kệ sách, đèn cây).
+- Dãy phòng bên trái (từ cửa vào trong): kệ · tủ (tủ đồ mở được) → phòng họp kín (10 ghế, TV trình chiếu, bảng trắng dùng chung) → bếp mở (tủ lạnh, tủ, máy pha cà phê, bình nước) → phòng giám đốc (rộng nhất, sofa, kệ sách, đèn cây).
 - Vách kính phía đông nhìn ra sông Hàn và **cầu Thuận Phước** (tháp cổng, cáp chính, dây treo, xe chạy, LED đổi màu ban đêm), thành phố, bán đảo Sơn Trà. **Ngày / hoàng hôn / đêm** (tự động theo giờ hoặc chọn tay).
 - Trần đen lộ kỹ thuật với đèn LED, ống PCCC đỏ, quạt treo tường cam — dựa trên ảnh thật của văn phòng.
 
@@ -106,6 +108,7 @@ npm run dev
 | T | Bật/tắt mic | V (giữ) | Push-to-talk |
 | 1…9, 0 | Biểu cảm (cười, cười lớn, khóc, buồn, giận, ngạc nhiên, vui, nghĩ, vẫy, vỗ tay) | G | Menu emote |
 | B | Dashboard | F1 / ? | Hướng dẫn & phím tắt |
+| L | Bảng xếp hạng chăm chỉ | | |
 | H | Ẩn UI | ` | Performance monitor |
 | Esc | Menu / đóng panel | Chuột kéo / cuộn | Xoay / zoom camera |
 
@@ -166,6 +169,8 @@ Mở rộng: chạy nhiều container `app` với `REDIS_URL` + sticky session �
 | 19 | Reconnect | ✅ Cài đặt (giữ ghế 45 s, khôi phục sau tải lại trang); chưa có test tự động |
 | 20 | Hướng dẫn local & production | ✅ |
 | 21 | Load test 50 client | ✅ Server/giao thức đã đo; **FPS client với 50 avatar chưa đo** |
+| — | Bảng xếp hạng | ✅ Kiểm tra với 8 bot thật làm việc: dữ liệu server → panel HUD & màn LED (vẽ canvas đã soát trên trình duyệt) |
+| — | Phòng kín / bếp mở | ✅ Kiểm tra logic: tường chặn di chuyển, đi qua cửa được, bếp vào tự do, lọc chat Nearby theo cửa; cách âm voice chưa thử end-to-end (cần LiveKit) |
 | 22 | Kiểm thử riêng voice SFU | ❌ Chưa chạy — có kịch bản `lk load-test` trong [LOADTEST](docs/LOADTEST.md) |
 
 Không tuyên bố 60 FPS: chưa có số đo FPS phía client với 50 avatar.

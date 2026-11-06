@@ -11,6 +11,7 @@ import { InteractiveObjects } from '../environment/Interactive';
 import { Lighting } from '../environment/Lighting';
 import { LogoSigns } from '../environment/Logo3D';
 import { AttendanceArea } from '../environment/Attendance';
+import { LeaderboardWall } from '../environment/Leaderboard';
 import { Decor } from '../environment/Decor';
 import { Outdoor } from '../environment/Outdoor';
 import { useTimeOfDay } from '../environment/timeOfDay';
@@ -73,6 +74,7 @@ export function GameScene({ onReady }: { onReady: () => void }) {
         <LogoSigns />
         <InteractiveObjects />
         <AttendanceArea />
+        <LeaderboardWall />
         <Decor />
         <InteractionSystem />
         <NavGuide />

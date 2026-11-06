@@ -36,9 +36,12 @@ import {
   sanitizeName,
   validateMove,
   zoneAt,
+  zonesConnected,
   type ChatMsg,
   type CheckInResultMsg,
   type KioskDisplay,
+  type LeaderboardData,
+  type LeaderboardEntry,
   type ChatSendMsg,
   type EmoteName,
   type InteractMsg,
@@ -53,7 +56,7 @@ import { config } from '../config';
 import { verifyToken } from '../services/auth';
 import { FloodCounter, TokenBucket } from '../services/rateLimit';
 import { store, type UserRecord } from '../services/store';
-import { dayKey, localMinutes, startOfDay, startOfWeek } from '../services/time';
+import { dayKey, localMinutes, startOfDay, startOfMonth, startOfWeek } from '../services/time';
 import { removeVoiceParticipant, setVoicePublish } from '../services/voice';
 import { AttendanceEntry, OfficeState, Player } from './schema';
 
@@ -136,6 +139,8 @@ export class OfficeRoom extends Room<OfficeState> {
     st.attendanceDay = dayKey();
     void this.loadAttendance();
     this.clock.setInterval(() => void this.refreshAttendance(), 5 * 60_000);
+    void this.refreshLeaderboard();
+    this.clock.setInterval(() => void this.refreshLeaderboard(), 15_000);
     officeRooms.set(this.officeId, this);
     this.registerHandlers();
     console.log(`[room] office "${this.officeId}" created (capacity ${st.capacity})`);
@@ -446,6 +451,46 @@ export class OfficeRoom extends Room<OfficeState> {
     }
     const id = await w.dbId;
     if (id) await store().updateWorkSession(id, { activeMs: sessionMs, endedAt: new Date(), endReason: reason }).catch((e) => console.error('[room] failed to close work session', e));
+    void this.refreshLeaderboard();
+  }
+
+  // ───────────────────────────── leaderboard ─────────────────────────────
+  private lbBusy = false;
+
+  /** Top workers per period: closed sessions from the store + live running sessions. */
+  private async refreshLeaderboard() {
+    if (this.lbBusy) return;
+    this.lbBusy = true;
+    try {
+      const now = Date.now();
+      const periods: Array<[keyof Omit<LeaderboardData, 'at'>, number]> = [['today', startOfDay(now)], ['week', startOfWeek(now)], ['month', startOfMonth(now)]];
+      const out: LeaderboardData = { at: now, today: [], week: [], month: [] };
+      for (const [key, since] of periods) {
+        const rows = await store().workLeaderboard(this.officeId, new Date(since), 30);
+        const map = new Map<string, LeaderboardEntry>(rows.map((r) => [r.userId, { userId: r.userId, name: r.displayName, ms: r.totalMs, sessions: r.sessions, working: false }]));
+        for (const p of this.rt.values()) {
+          const w = p.work;
+          const pl = this.state.players.get(p.sid);
+          if (pl) {
+            const e = map.get(p.user.id);
+            if (e) e.name = pl.name;
+          }
+          if (!w || w.startedAt < since) continue;
+          const live = Math.max(0, this.activeMs(w, now) - w.baseMs);
+          const e = map.get(p.user.id) ?? { userId: p.user.id, name: pl?.name ?? p.user.displayName, ms: 0, sessions: 0, working: false };
+          e.ms += live;
+          e.sessions += 1;
+          e.working = !!w.segmentStart;
+          map.set(p.user.id, e);
+        }
+        out[key] = [...map.values()].sort((a, b) => b.ms - a.ms).slice(0, 10);
+      }
+      this.state.leaderboard = JSON.stringify(out);
+    } catch (e) {
+      console.warn('[room] leaderboard refresh failed', (e as Error).message);
+    } finally {
+      this.lbBusy = false;
+    }
   }
 
   private async persistHeartbeat() {
@@ -500,9 +545,12 @@ export class OfficeRoom extends Room<OfficeState> {
         break;
       case 'nearby': {
         const r2 = NEARBY_CHAT_RADIUS * NEARBY_CHAT_RADIUS;
+        const objects = (id: string) => this.state.objects.get(id);
         recipients = this.clients.filter((c) => {
           const o = this.rt.get(c.sessionId);
-          return o && (o.x - p.x) ** 2 + (o.z - p.z) ** 2 <= r2;
+          if (!o || (o.x - p.x) ** 2 + (o.z - p.z) ** 2 > r2) return false;
+          // Private rooms are sound-proof: no nearby chat through closed doors.
+          return zonesConnected(zoneAt(p.x, p.z), zoneAt(o.x, o.z), objects);
         });
         break;
       }

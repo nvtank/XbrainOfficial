@@ -57,7 +57,7 @@ export const VOICE_SUBSCRIBE_MARGIN = 2;
 export const VOICE_UNSUBSCRIBE_MARGIN = 5;
 
 /** Gain multiplier when listener & speaker are separated by a closed room wall. */
-export const WALL_OCCLUSION_GAIN = 0.06;
+export const WALL_OCCLUSION_GAIN = 0;
 /** Gain multiplier through an open door. */
 export const OPEN_DOOR_OCCLUSION_GAIN = 0.3;
 

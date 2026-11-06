@@ -267,6 +267,7 @@ export function HelpPanel() {
     ['Chat', <Kbd>{keyLabel(keys.chat)}</Kbd>],
     ['Mic · Push-to-talk', <><Kbd>{keyLabel(keys.mic)}</Kbd> · giữ <Kbd>{keyLabel(keys.ptt)}</Kbd></>],
     ['Bản đồ · Trạng thái', <><Kbd>{keyLabel(keys.map)}</Kbd> · <Kbd>{keyLabel(keys.dashboard)}</Kbd></>],
+    ['Bảng xếp hạng chăm chỉ', <Kbd>{keyLabel(keys.leaderboard)}</Kbd>],
     ['Ẩn UI · Hiệu năng', <><Kbd>{keyLabel(keys.hideUi)}</Kbd> · <Kbd>{keyLabel(keys.perf)}</Kbd></>],
     ['Cài đặt · đóng bảng', <Kbd>{keyLabel(keys.menu)}</Kbd>],
   ];

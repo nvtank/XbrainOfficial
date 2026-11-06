@@ -691,6 +691,7 @@ export function buildFurniture(b: Batch, f: FurnitureDef) {
     case 'statusScreen':
     case 'welcomeScreen':
     case 'attendanceScreen':
+    case 'leaderboard':
     case 'kiosk':
     case 'poster':
     case 'sign':

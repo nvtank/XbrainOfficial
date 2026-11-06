@@ -15,6 +15,7 @@ import {
   type RemoteTrackPublication,
 } from 'livekit-client';
 import {
+  DOOR_OF_ZONE,
   OPEN_DOOR_OCCLUSION_GAIN,
   VOICE_SUBSCRIBE_MARGIN,
   VOICE_UNSUBSCRIBE_MARGIN,
@@ -41,7 +42,6 @@ interface RemoteNode {
   el: HTMLAudioElement;
 }
 
-const DOOR_OF_ZONE: Partial<Record<ZoneId, string>> = { meeting: 'door-meeting', kitchen: 'door-kitchen', director: 'door-director' };
 
 /** Distance → gain using the configurable bands. */
 export function distanceGain(d: number, r: VoiceRanges): number {

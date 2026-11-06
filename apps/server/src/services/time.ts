@@ -20,6 +20,14 @@ export function localMinutes(now = Date.now()): number {
   return d.getUTCHours() * 60 + d.getUTCMinutes();
 }
 
+/** Start of the current office-local month. */
+export function startOfMonth(now = Date.now()): number {
+  const d = new Date(now + offsetMs());
+  d.setUTCDate(1);
+  d.setUTCHours(0, 0, 0, 0);
+  return d.getTime() - offsetMs();
+}
+
 /** Start of the current office-local week (Monday 00:00). */
 export function startOfWeek(now = Date.now()): number {
   const d = new Date(now + offsetMs());

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Armchair, Briefcase, Camera, EyeOff, LayoutDashboard, Map as MapIcon, Mic, MicOff, Radio, Smile } from 'lucide-react';
+import { Armchair, Briefcase, Camera, EyeOff, LayoutDashboard, Map as MapIcon, Mic, MicOff, Radio, Smile, Trophy } from 'lucide-react';
 import { CAMERA_PRESETS, DESKS, EMOTES, EMOTE_ICONS, EMOTE_LABELS, SEAT_BY_ID } from '@xbrain/shared';
 import { useGame, type CameraMode } from '../../stores/game';
 import { useSettings, keyLabel } from '../../stores/settings';
@@ -179,6 +179,10 @@ export function Toolbar() {
       <button className={`tool-btn ${dashboard ? 'tool-btn-active' : ''}`} onClick={() => useGame.getState().set({ dashboardOpen: !dashboard })} title="Office status (B)">
         <LayoutDashboard className="h-5 w-5" />
         Status
+      </button>
+      <button className="tool-btn" onClick={() => useGame.getState().set({ leaderboardOpen: true })} title="Bảng xếp hạng chăm chỉ (L)">
+        <Trophy className="h-5 w-5" />
+        Top
       </button>
       <button className="tool-btn" onClick={() => useGame.getState().set({ hudHidden: true })} title="Hide UI for screenshots (H)">
         <EyeOff className="h-5 w-5" />

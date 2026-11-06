@@ -13,6 +13,7 @@ import { voice } from '../../services/voice';
 import { Logo } from '../LoadingScreen';
 import { ChatPanel } from './Chat';
 import { HelpPanel, Tutorial } from './Tutorial';
+import { LeaderboardPanel } from './LeaderboardPanel';
 import { Toolbar } from './Toolbar';
 import { BigMap, MiniMap } from './Map';
 import { Dashboard } from './Dashboard';
@@ -40,8 +41,8 @@ function useHotkeys() {
       }),
       input.onPress('menu', () => {
         const s = g();
-        if (s.mapOpen || s.computerOpen || s.whiteboardOpen || s.onlineOpen || s.emoteOpen || s.helpOpen) {
-          s.set({ mapOpen: false, computerOpen: false, whiteboardOpen: null, onlineOpen: false, emoteOpen: false, helpOpen: false });
+        if (s.mapOpen || s.computerOpen || s.whiteboardOpen || s.onlineOpen || s.emoteOpen || s.helpOpen || s.leaderboardOpen) {
+          s.set({ mapOpen: false, computerOpen: false, whiteboardOpen: null, onlineOpen: false, emoteOpen: false, helpOpen: false, leaderboardOpen: false });
         } else if (s.settingsOpen) s.set({ settingsOpen: false });
         else if (s.cameraMode === 'overview' || s.cameraMode === 'preset') s.setCamera(s.followMode);
         else s.set({ settingsOpen: true });
@@ -54,6 +55,11 @@ function useHotkeys() {
       input.onRelease('ptt', () => useSettings.getState().pushToTalk && void voice.ptt(false)),
       input.onPress('emote', () => g().set({ emoteOpen: !g().emoteOpen })),
       input.onPress('dashboard', () => g().set({ dashboardOpen: !g().dashboardOpen })),
+      input.onPress('leaderboard', () => {
+        const s = g();
+        if (s.chatFocused || s.settingsOpen) return;
+        s.set({ leaderboardOpen: !s.leaderboardOpen });
+      }),
       input.onPress('hideUi', () => g().set({ hudHidden: !g().hudHidden })),
       input.onPress('perf', () => useSettings.getState().set({ showFps: !useSettings.getState().showFps })),
     ];
@@ -198,6 +204,7 @@ export function HUD() {
       <FaceCheckIn />
       {!hidden && <Tutorial />}
       <HelpPanel />
+      <LeaderboardPanel />
       <ConnectionOverlay />
       <PerfOverlay />
     </>
