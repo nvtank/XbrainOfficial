@@ -37,6 +37,8 @@ import {
   validateMove,
   zoneAt,
   type ChatMsg,
+  type CheckInResultMsg,
+  type KioskDisplay,
   type ChatSendMsg,
   type EmoteName,
   type InteractMsg,
@@ -51,9 +53,9 @@ import { config } from '../config';
 import { verifyToken } from '../services/auth';
 import { FloodCounter, TokenBucket } from '../services/rateLimit';
 import { store, type UserRecord } from '../services/store';
-import { startOfDay, startOfWeek } from '../services/time';
+import { dayKey, localMinutes, startOfDay, startOfWeek } from '../services/time';
 import { removeVoiceParticipant, setVoicePublish } from '../services/voice';
-import { OfficeState, Player } from './schema';
+import { AttendanceEntry, OfficeState, Player } from './schema';
 
 interface WorkRuntime {
   deskId: string;
@@ -130,6 +132,10 @@ export class OfficeRoom extends Room<OfficeState> {
     this.setMetadata({ officeId: this.officeId, name: st.officeName });
     this.setSimulationInterval(() => this.tick(), 1000 / SERVER_TICK_HZ);
     this.clock.setInterval(() => this.persistHeartbeat(), 60_000);
+    st.lateAfter = config.attendanceLateAfter;
+    st.attendanceDay = dayKey();
+    void this.loadAttendance();
+    this.clock.setInterval(() => void this.refreshAttendance(), 5 * 60_000);
     officeRooms.set(this.officeId, this);
     this.registerHandlers();
     console.log(`[room] office "${this.officeId}" created (capacity ${st.capacity})`);
@@ -207,6 +213,7 @@ export class OfficeRoom extends Room<OfficeState> {
     client.send(S2C.Snapshot, { t: now, p: this.allEntries(client.sessionId) });
     client.send(S2C.Teleported, { x, y: 0, z, rotY: SPAWN.rotY, reason: 'spawn' });
     this.loadTodayStats(p).catch(() => undefined);
+    store().touchUser(user.id).catch(() => undefined);
     console.log(`[room] + ${user.displayName} (${client.sessionId}) — ${this.clients.length}/${this.maxClients}`);
   }
 
@@ -300,6 +307,7 @@ export class OfficeRoom extends Room<OfficeState> {
       if (!p.buckets.misc.take()) return;
       this.sendStats(client, p).catch(() => undefined);
     });
+    this.on<unknown>(C2S.CheckIn, (client, p) => void this.handleCheckIn(client, p));
     this.on<{ zone: ZoneId }>(C2S.Teleport, (client, p, m) => this.handleTeleport(client, p, m?.zone));
     this.on<unknown>(C2S.AvatarUpdated, (_c, p) => {
       if (!p.buckets.misc.take(3)) return;
@@ -561,6 +569,55 @@ export class OfficeRoom extends Room<OfficeState> {
     }
     const text = m.text.normalize('NFC').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, '').slice(0, WHITEBOARD_MAX_LENGTH);
     this.state.boards.set(m.id, text);
+  }
+
+  // ───────────────────────────── attendance ─────────────────────────────
+  private async loadAttendance() {
+    const day = dayKey();
+    const rows = await store().attendanceForDay(this.officeId, day).catch(() => []);
+    this.state.attendanceDay = day;
+    this.state.attendance.clear();
+    for (const r of rows) this.setAttendance(r.userId, r.displayName, r.at.getTime(), r.late);
+    this.state.activeWeek = await store().activeUsersSince(new Date(startOfWeek())).catch(() => this.state.activeWeek);
+  }
+
+  private async refreshAttendance() {
+    if (this.state.attendanceDay !== dayKey()) await this.loadAttendance();
+    else this.state.activeWeek = await store().activeUsersSince(new Date(startOfWeek())).catch(() => this.state.activeWeek);
+  }
+
+  private setAttendance(userId: string, name: string, time: number, late: boolean) {
+    const e = new AttendanceEntry();
+    e.userId = userId;
+    e.name = name;
+    e.time = time;
+    e.late = late;
+    this.state.attendance.set(userId, e);
+  }
+
+  private async handleCheckIn(client: Client, p: PlayerRuntime) {
+    if (!p.buckets.interact.take()) return;
+    const kiosk = INTERACTABLE_BY_ID.checkin;
+    const pl = this.state.players.get(p.sid);
+    if (!pl) return;
+    if (Math.hypot(p.x - kiosk.x, p.z - kiosk.z) > kiosk.radius + 1.5) {
+      client.send(S2C.CheckInResult, { ok: false, already: false, name: pl.name, time: 0, late: false, reason: 'Stand in front of the Face ID terminal to check in.' } satisfies CheckInResultMsg);
+      return;
+    }
+    if (this.state.attendanceDay !== dayKey()) await this.loadAttendance();
+    const now = Date.now();
+    const late = localMinutes(now) > this.state.lateAfter;
+    try {
+      const r = await store().checkIn({ userId: p.user.id, officeId: this.officeId, day: dayKey(now), at: new Date(now), late });
+      this.setAttendance(p.user.id, pl.name, r.at.getTime(), r.late);
+      this.state.activeWeek = Math.max(this.state.activeWeek, this.state.attendance.size);
+      const msg: CheckInResultMsg = { ok: true, already: r.already, name: pl.name, time: r.at.getTime(), late: r.late };
+      client.send(S2C.CheckInResult, msg);
+      this.state.boards.set('kiosk', JSON.stringify({ name: pl.name, time: msg.time, late: msg.late, already: msg.already } satisfies KioskDisplay));
+    } catch (e) {
+      console.error('[room] check-in failed', e);
+      client.send(S2C.CheckInResult, { ok: false, already: false, name: pl.name, time: 0, late: false, reason: 'Attendance service unavailable, please try again.' } satisfies CheckInResultMsg);
+    }
   }
 
   private handleTeleport(client: Client, p: PlayerRuntime, zone: ZoneId) {

@@ -60,6 +60,17 @@ function makeWaterNormal() {
   return t;
 }
 
+/** Our own building below the office floor (not part of the rotated scenery). */
+function OwnTower() {
+  const mat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#3d4a57', roughness: 0.3, metalness: 0.6 }), []);
+  const h = -(WATER_Y + 1.8) - 0.3;
+  return (
+    <mesh position={[-1.5, -0.3 - h / 2, -8]} material={mat}>
+      <boxGeometry args={[33, h, 48]} />
+    </mesh>
+  );
+}
+
 function Water({ tod }: { tod: Tod }) {
   const normal = useMemo(makeWaterNormal, []);
   const mat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#2b6a82', roughness: 0.22, metalness: 0.3, normalMap: normal, normalScale: new THREE.Vector2(0.12, 0.12) }), [normal]);
@@ -80,7 +91,6 @@ function Land({ tod }: { tod: Tod }) {
   const green = useMemo(() => new THREE.MeshStandardMaterial({ color: '#3f5e43', roughness: 1 }), []);
   mat.color.set(tod === 'night' ? '#1b1f24' : tod === 'sunset' ? '#4d4a4a' : '#59605a');
   green.color.set(tod === 'night' ? '#16231a' : '#3f5e43');
-  const building = useMemo(() => new THREE.MeshStandardMaterial({ color: '#3d4a57', roughness: 0.3, metalness: 0.6 }), []);
   return (
     <group>
       {/* Near bank (our side) */}
@@ -96,10 +106,6 @@ function Land({ tod }: { tod: Tod }) {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[900, WATER_Y + 1.8, 2200]} material={mat}>
         <planeGeometry args={[1600, 3600]} />
-      </mesh>
-      {/* Our own tower below the office floor */}
-      <mesh position={[-2, (WATER_Y + 1.8 - 0.3) / 2, -8]} material={building}>
-        <boxGeometry args={[32, -(WATER_Y + 1.8) - 0.3, 48]} />
       </mesh>
     </group>
   );
@@ -119,7 +125,8 @@ function City({ tod }: { tod: Tod }) {
       for (let i = 0; i < n; i++) {
         const x = x0 + r() * (x1 - x0);
         const z = z0 + r() * (z1 - z0);
-        if (Math.abs(x + 2) < 70 && Math.abs(z + 8) < 80) continue;
+        // Keep clear of our own tower (scenery is rotated: world = (z + 120, -x)).
+        if (Math.abs(z + 120 + 2) < 70 && Math.abs(-x + 8) < 80) continue;
         const w = 20 + r() * 35;
         const d = 20 + r() * 35;
         const h = hMin + Math.pow(r(), 2.2) * (hMax - hMin);
@@ -365,12 +372,17 @@ export function Outdoor({ tod }: { tod: Tod }) {
         </>
       )}
       <fog attach="fog" args={[p.fog, p.fogNear, p.fogFar]} />
-      <Water tod={tod} />
-      <Land tod={tod} />
-      <City tod={tod} />
-      <Mountains tod={tod} />
-      <Bridge tod={tod} />
-      <Boats />
+      <OwnTower />
+      {/* The scenery is authored looking along +X; rotate it so the bridge sits straight ahead
+          of the north glass façade (-Z), centred on the office. */}
+      <group rotation={[0, Math.PI / 2, 0]} position={[120, 0, 0]}>
+        <Water tod={tod} />
+        <Land tod={tod} />
+        <City tod={tod} />
+        <Mountains tod={tod} />
+        <Bridge tod={tod} />
+        <Boats />
+      </group>
     </group>
   );
 }

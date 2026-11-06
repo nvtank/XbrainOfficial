@@ -1,6 +1,6 @@
 /** Imperative avatar object: rig + animator + nameplate + speech bubble. Driven per-frame without React re-renders. */
 import * as THREE from 'three';
-import type { AvatarConfig } from '@xbrain/shared';
+import { AVATAR_HEIGHT, type AvatarConfig } from '@xbrain/shared';
 import { avatarKey, createAvatar, type AvatarRig } from './avatarFactory';
 import { AvatarAnimator, type AnimInput } from './animator';
 import { Nameplate, SpeechBubble, type NameplateState } from './nameplate';
@@ -13,7 +13,7 @@ export class AvatarEntity {
   readonly bubble = new SpeechBubble();
   private key = '';
   private castShadow: boolean;
-  private plateY = 1.95;
+  private plateY = 1.3;
   /** Animation LOD accumulator. */
   private skipAcc = 0;
 
@@ -54,10 +54,10 @@ export class AvatarEntity {
       this.skipAcc = 0;
     }
     const seated = anim.loco === 'sit' || anim.loco === 'type';
-    const target = (seated ? 1.5 : 1.93) * (this.rig.height / 1.72);
+    const target = (seated ? 1.43 : 1.3) * (this.rig.height / AVATAR_HEIGHT);
     this.plateY += (target - this.plateY) * Math.min(1, dt * 6);
     this.plate.sprite.position.y = this.plateY;
-    this.bubble.sprite.position.y = this.plateY + 0.56;
+    this.bubble.sprite.position.y = this.plateY + 0.45;
   }
   private animFrame = 0;
 

@@ -220,9 +220,9 @@ class VoiceManager {
       n.filter.frequency.setTargetAtTime(muffled ? 900 : 20000, t, 0.1);
       if (n.panner.positionX) {
         n.panner.positionX.setTargetAtTime(pos.x, t, 0.05);
-        n.panner.positionY.setTargetAtTime(pos.y + 1.55, t, 0.05);
+        n.panner.positionY.setTargetAtTime(pos.y + 1.0, t, 0.05);
         n.panner.positionZ.setTargetAtTime(pos.z, t, 0.05);
-      } else n.panner.setPosition(pos.x, pos.y + 1.55, pos.z);
+      } else n.panner.setPosition(pos.x, pos.y + 1.0, pos.z);
       if (g > 0.01) audible[p.identity] = Math.round(g * 100) / 100;
     }
     const prev = vs.audible;

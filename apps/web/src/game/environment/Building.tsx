@@ -19,6 +19,7 @@ function floorMaterial(kind: FloorKind | 'stone') {
     wood: { t: tex.wood, rough: 0.55 },
     kitchenTile: { t: tex.kitchenTile, rough: 0.4 },
     meetingCarpet: { t: tex.meetingCarpet, rough: 0.98 },
+    marble: { t: tex.marble, rough: 0.12, metal: 0.05 },
   };
   const m = map[kind];
   return new THREE.MeshStandardMaterial({ map: m.t, roughness: m.rough, metalness: m.metal ?? 0 });
@@ -134,29 +135,37 @@ function buildCeiling() {
     const h = z.id === 'outside' ? FACADE_HEIGHT : H;
     b.box(finished ? 'ceilingWhite' : 'ceiling', w + 0.4, 0.1, d + 0.4, cx, h + 0.05, cz);
   }
-  // LED panels in the workspace (hanging, like the real office)
-  for (let x = -1.5; x <= 9; x += 3.5)
-    for (let z = -2.5; z >= -28.5; z -= 3.3) {
-      b.box('led', 1.2, 0.03, 0.6, x, 2.9, z);
-      b.box('blackMetal', 1.24, 0.035, 0.64, x, 2.92, z);
-      b.cyl('steel', 0.004, 0.004, 0.3, x - 0.5, 3.07, z, 4);
-      b.cyl('steel', 0.004, 0.004, 0.3, x + 0.5, 3.07, z, 4);
+  // LED panels hanging 0.55 m below the higher exposed ceiling (like the real office)
+  const panelY = H - 0.55;
+  for (let x = -1.5; x <= 10.5; x += 3.5)
+    for (let z = -2.5; z >= -27.5; z -= 3.3) {
+      b.box('led', 1.2, 0.03, 0.6, x, panelY, z);
+      b.box('blackMetal', 1.24, 0.035, 0.64, x, panelY + 0.02, z);
+      b.cyl('steel', 0.004, 0.004, 0.55, x - 0.5, panelY + 0.3, z, 4);
+      b.cyl('steel', 0.004, 0.004, 0.55, x + 0.5, panelY + 0.3, z, 4);
     }
-  // Corridor & storage & lounge downlights
-  for (let z = -2; z >= -29; z -= 3) b.cyl('led', 0.08, 0.08, 0.02, -5.75, 3.14, z, 12);
-  for (let z = -2; z >= -29; z -= 3) b.cyl('led', 0.08, 0.08, 0.02, 11.1, 3.14, z, 12);
-  for (const [x, z] of [[-12, -1.5], [-9, -1.5], [-12, -3.5], [-9, -3.5]]) b.box('led', 0.6, 0.02, 0.6, x, 3.18, z);
-  // Rooms: recessed square panels
-  for (const [x, z] of [[-12.3, -6.5], [-8.7, -6.5], [-12.3, -10.2], [-8.7, -10.2], [-12, -14], [-12, -17.5], [-8.6, -14], [-8.6, -17.5], [-12, -21], [-9, -21], [-12, -24.5], [-9, -24.5], [-12, -28], [-9, -28]])
-    b.box('led', 0.6, 0.02, 0.6, x, 3.19, z);
+  // Warm linear light over the bridge-view lounge
+  b.box('black', 14, 0.06, 0.12, 3.5, H - 0.7, -29.0);
+  b.box('ledWarm', 13.9, 0.01, 0.08, 3.5, H - 0.735, -29.0);
+  for (const x of [-3, 3.5, 10]) b.cyl('steel', 0.004, 0.004, 0.7, x, H - 0.35, -29.0, 4);
+  // Corridor & storage downlights
+  for (let z = -2; z >= -29; z -= 3) b.cyl('led', 0.09, 0.09, 0.02, -5.75, H - 0.06, z, 12);
+  for (const [x, z] of [[-13, -1.5], [-9.5, -1.5], [-13, -3.5], [-9.5, -3.5]]) b.box('led', 0.6, 0.02, 0.6, x, H - 0.02, z);
+  // Rooms: recessed square panels + perimeter cove light in the director office
+  for (const [x, z] of [[-13, -6.5], [-9, -6.5], [-13, -10.2], [-9, -10.2], [-12.8, -14], [-12.8, -17.5], [-9, -14], [-9, -17.5]])
+    b.box('led', 0.6, 0.02, 0.6, x, H - 0.01, z);
+  b.box('ledWarm', 7.8, 0.02, 0.06, -11.05, H - 0.05, -19.25);
+  b.box('ledWarm', 7.8, 0.02, 0.06, -11.05, H - 0.05, -29.85);
+  b.box('ledWarm', 0.06, 0.02, 10.5, -14.85, H - 0.05, -24.5);
+  for (const [x, z] of [[-13.5, -24.5], [-8.5, -24.5], [-8.5, -28.5], [-8.5, -21]]) b.cyl('ledWarm', 0.07, 0.07, 0.02, x, H - 0.01, z, 12);
   // Lobby downlights + entrance corridor
-  for (let x = -6; x <= 6; x += 2) for (const z of [1.2, 4.0, 6.2]) b.cyl('ledWarm', 0.07, 0.07, 0.02, x, 3.19, z, 12);
+  for (let x = -6; x <= 6; x += 2) for (const z of [1.2, 4.0, 6.2]) b.cyl('ledWarm', 0.07, 0.07, 0.02, x, H - 0.01, z, 12);
   for (let x = -14; x <= 14; x += 2.5) b.cyl('led', 0.09, 0.09, 0.02, x, FACADE_HEIGHT - 0.01, 10.5, 12);
   // Exposed services: ducts + red sprinkler pipes
-  for (const x of [-0.2, 8.2]) b.cyl('duct', 0.24, 0.24, 30, x, 3.0, -15, 14, [Math.PI / 2, 0, 0]);
-  for (const z of [-4.2, -12.4, -20.6, -27.6]) b.cyl('pipeRed', 0.035, 0.035, 16, 3.5, 3.08, z, 8, [0, 0, Math.PI / 2]);
-  b.cyl('pipeRed', 0.04, 0.04, 30, 5.8, 3.1, -15, 8, [Math.PI / 2, 0, 0]);
-  for (let z = -4; z >= -28; z -= 4) b.cyl('pipeRed', 0.015, 0.015, 0.2, 5.8, 2.97, z, 6);
+  for (const x of [-0.2, 8.2]) b.cyl('duct', 0.26, 0.26, 28, x, H - 0.3, -14, 14, [Math.PI / 2, 0, 0]);
+  for (const z of [-4.2, -12.4, -20.6, -27.6]) b.cyl('pipeRed', 0.035, 0.035, 16, 3.5, H - 0.14, z, 8, [0, 0, Math.PI / 2]);
+  b.cyl('pipeRed', 0.04, 0.04, 30, 5.8, H - 0.12, -15, 8, [Math.PI / 2, 0, 0]);
+  for (let z = -4; z >= -28; z -= 4) b.cyl('pipeRed', 0.015, 0.015, 0.2, 5.8, H - 0.25, z, 6);
   return b.build({ castShadow: false, receiveShadow: false });
 }
 

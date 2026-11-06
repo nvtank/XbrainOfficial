@@ -97,6 +97,9 @@ export function InteractionSystem() {
         case 'whiteboard':
           g.set({ whiteboardOpen: def.id });
           break;
+        case 'checkin':
+          g.set({ checkin: { phase: 'scanning' } });
+          break;
         case 'view':
           g.setCamera('preset', 'bridge');
           g.toast('info', 'Thuận Phước Bridge view — press C to return to your avatar.');

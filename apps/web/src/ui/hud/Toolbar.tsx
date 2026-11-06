@@ -96,7 +96,8 @@ function EmoteMenu() {
       </button>
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} className="glass absolute bottom-16 left-1/2 grid w-[300px] -translate-x-1/2 grid-cols-4 gap-1 p-2">
+          <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} className="glass absolute bottom-16 left-1/2 grid w-[360px] -translate-x-1/2 grid-cols-5 gap-1 p-2">
+            <div className="col-span-5 px-1 pb-1 text-[11px] text-white/50">Expressions & emotes — keys 1…9, 0 work anytime</div>
             {EMOTES.map((e, i) => (
               <button
                 key={e}
@@ -108,7 +109,7 @@ function EmoteMenu() {
               >
                 <span className="text-2xl">{EMOTE_ICONS[e]}</span>
                 <span className="mt-0.5 text-white/80">{EMOTE_LABELS[e]}</span>
-                <span className="font-mono text-[10px] text-white/40">{i + 1}</span>
+                <span className="font-mono text-[10px] text-white/40">{i < 10 ? (i + 1) % 10 : ''}</span>
               </button>
             ))}
           </motion.div>
@@ -135,7 +136,7 @@ function CameraMenu() {
       </button>
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="glass absolute bottom-16 left-1/2 w-[230px] -translate-x-1/2 p-2 text-sm">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="glass scrollbar-thin absolute bottom-16 left-1/2 max-h-[70vh] w-[250px] -translate-x-1/2 overflow-y-auto p-2 text-sm">
             <div className="label px-2 pb-1">View</div>
             {modes.map((m) => (
               <button key={m.id} className={`block w-full rounded-lg px-2 py-1.5 text-left hover:bg-white/10 ${mode === m.id ? 'text-brand' : ''}`} onClick={() => (useGame.getState().setCamera(m.id), setOpen(false))}>
@@ -143,7 +144,13 @@ function CameraMenu() {
               </button>
             ))}
             <div className="label px-2 pb-1 pt-2">Room cameras</div>
-            {CAMERA_PRESETS.filter((p) => p.id !== 'overview').map((p) => (
+            {CAMERA_PRESETS.filter((p) => p.group === 'room').map((p) => (
+              <button key={p.id} className={`block w-full rounded-lg px-2 py-1.5 text-left hover:bg-white/10 ${mode === 'preset' && preset === p.id ? 'text-brand' : ''}`} onClick={() => (useGame.getState().setCamera('preset', p.id), setOpen(false))}>
+                {p.label}
+              </button>
+            ))}
+            <div className="label px-2 pb-1 pt-2">Security cameras (CCTV)</div>
+            {CAMERA_PRESETS.filter((p) => p.group === 'cctv').map((p) => (
               <button key={p.id} className={`block w-full rounded-lg px-2 py-1.5 text-left hover:bg-white/10 ${mode === 'preset' && preset === p.id ? 'text-brand' : ''}`} onClick={() => (useGame.getState().setCamera('preset', p.id), setOpen(false))}>
                 {p.label}
               </button>

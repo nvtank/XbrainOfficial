@@ -20,6 +20,16 @@ export interface Toast {
   title?: string;
 }
 
+export interface CheckInState {
+  phase: 'idle' | 'scanning' | 'sent' | 'result';
+  ok?: boolean;
+  already?: boolean;
+  name?: string;
+  time?: number;
+  late?: boolean;
+  reason?: string;
+}
+
 export interface NavTarget {
   label: string;
   points: Vec2[];
@@ -51,6 +61,10 @@ interface GameState {
   connection: ConnectionState;
   pointerLocked: boolean;
   ping: number;
+  checkin: CheckInState;
+  /** First-run interactive tutorial and the controls cheat sheet. */
+  tutorialOpen: boolean;
+  helpOpen: boolean;
   toasts: Toast[];
   set: (patch: Partial<GameState>) => void;
   toast: (level: Toast['level'], text: string, title?: string) => void;
@@ -85,6 +99,9 @@ export const useGame = create<GameState>((set, get) => ({
   connection: 'connecting',
   pointerLocked: false,
   ping: 0,
+  checkin: { phase: 'idle' },
+  tutorialOpen: false,
+  helpOpen: false,
   toasts: [],
   set: (patch) => set(patch),
   toast: (level, text, title) => {
@@ -101,6 +118,6 @@ export const useGame = create<GameState>((set, get) => ({
     })),
   anyModal: () => {
     const s = get();
-    return s.settingsOpen || s.mapOpen || s.computerOpen || !!s.whiteboardOpen || s.chatFocused;
+    return s.settingsOpen || s.mapOpen || s.computerOpen || !!s.whiteboardOpen || s.chatFocused || s.helpOpen || s.checkin.phase !== 'idle';
   },
 }));

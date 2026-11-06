@@ -1,22 +1,23 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Expand, LogOut, Settings, Users } from 'lucide-react';
-import { EMOTES } from '@xbrain/shared';
+import { Expand, HelpCircle, LogOut, Settings, Users } from 'lucide-react';
+import { EMOTE_HOTKEYS } from '@xbrain/shared';
 import { useApp } from '../../stores/app';
 import { useGame } from '../../stores/game';
 import { useSettings } from '../../stores/settings';
 import { useWorld } from '../../stores/world';
 import { useVoiceStore } from '../../stores/voice';
-import { input } from '../../game/controls/input';
+import { input, isTypingTarget } from '../../game/controls/input';
 import { net } from '../../services/network';
 import { voice } from '../../services/voice';
 import { Logo } from '../LoadingScreen';
 import { ChatPanel } from './Chat';
+import { HelpPanel, Tutorial } from './Tutorial';
 import { Toolbar } from './Toolbar';
 import { BigMap, MiniMap } from './Map';
 import { Dashboard } from './Dashboard';
 import { SettingsModal } from './Settings';
-import { ComputerUI, ConnectionOverlay, InteractionPrompt, OnlineList, PerfOverlay, PointerHint, Toasts, WhiteboardUI } from './Panels';
+import { ComputerUI, ConnectionOverlay, FaceCheckIn, InteractionPrompt, OnlineList, PerfOverlay, PointerHint, Toasts, WhiteboardUI } from './Panels';
 
 function useHotkeys() {
   useEffect(() => {
@@ -39,8 +40,8 @@ function useHotkeys() {
       }),
       input.onPress('menu', () => {
         const s = g();
-        if (s.mapOpen || s.computerOpen || s.whiteboardOpen || s.onlineOpen || s.emoteOpen) {
-          s.set({ mapOpen: false, computerOpen: false, whiteboardOpen: null, onlineOpen: false, emoteOpen: false });
+        if (s.mapOpen || s.computerOpen || s.whiteboardOpen || s.onlineOpen || s.emoteOpen || s.helpOpen) {
+          s.set({ mapOpen: false, computerOpen: false, whiteboardOpen: null, onlineOpen: false, emoteOpen: false, helpOpen: false });
         } else if (s.settingsOpen) s.set({ settingsOpen: false });
         else if (s.cameraMode === 'overview' || s.cameraMode === 'preset') s.setCamera(s.followMode);
         else s.set({ settingsOpen: true });
@@ -56,16 +57,29 @@ function useHotkeys() {
       input.onPress('hideUi', () => g().set({ hudHidden: !g().hudHidden })),
       input.onPress('perf', () => useSettings.getState().set({ showFps: !useSettings.getState().showFps })),
     ];
+    // Expressions on number keys 1…9, 0 (smile, laugh, cry, sad, angry, surprised, happy, think, wave, clap)
     const onDigit = (e: KeyboardEvent) => {
-      if (!g().emoteOpen || !/^Digit[1-7]$/.test(e.code)) return;
-      const name = EMOTES[Number(e.code.slice(5)) - 1];
-      if (name) net.emote(name);
+      if (isTypingTarget(e.target) || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+      if (g().anyModal()) return;
+      const hit = EMOTE_HOTKEYS.find(([code]) => code === e.code);
+      if (!hit) return;
+      net.emote(hit[1]);
       g().set({ emoteOpen: false });
     };
+    // F1 or "?" opens the help / controls sheet
+    const onHelp = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.code === 'F1' || e.key === '?') {
+        e.preventDefault();
+        g().set({ helpOpen: !g().helpOpen });
+      }
+    };
     window.addEventListener('keydown', onDigit);
+    window.addEventListener('keydown', onHelp);
     return () => {
       offs.forEach((o) => o());
       window.removeEventListener('keydown', onDigit);
+      window.removeEventListener('keydown', onHelp);
     };
   }, []);
 }
@@ -112,6 +126,9 @@ function TopRight() {
       </button>
       <button className={`btn-ghost h-9 border-0 ${onlineOpen ? 'bg-white/15' : ''}`} title="People online" onClick={() => useGame.getState().set({ onlineOpen: !onlineOpen })}>
         <Users className="h-4 w-4" /> <span className="text-xs">{count}</span>
+      </button>
+      <button className="btn-ghost h-9 w-9 border-0 p-0" title="Hướng dẫn & phím tắt (F1)" onClick={() => useGame.getState().set({ helpOpen: true })}>
+        <HelpCircle className="h-4 w-4" />
       </button>
       <button className="btn-ghost h-9 w-9 border-0 p-0" title="Settings (Esc)" onClick={() => useGame.getState().set({ settingsOpen: true })}>
         <Settings className="h-4 w-4" />
@@ -178,6 +195,9 @@ export function HUD() {
       <AnimatePresence>{mapOpen && <BigMap key="map" />}</AnimatePresence>
       <ComputerUI />
       <WhiteboardUI />
+      <FaceCheckIn />
+      {!hidden && <Tutorial />}
+      <HelpPanel />
       <ConnectionOverlay />
       <PerfOverlay />
     </>

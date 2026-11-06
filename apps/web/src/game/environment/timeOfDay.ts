@@ -49,7 +49,7 @@ export interface TodPreset {
 
 export const TOD_PRESETS: Record<Tod, TodPreset> = {
   day: {
-    sunDir: [0.72, 0.6, 0.35], sunColor: '#fff3df', sunIntensity: 2.6,
+    sunDir: [0.28, 0.62, -0.73], sunColor: '#fff3df', sunIntensity: 2.6,
     hemiSky: '#dcebff', hemiGround: '#b8b0a2', hemiIntensity: 0.7,
     ambient: 0.42, ambientColor: '#ffffff',
     fog: '#cfdfec', fogNear: 500, fogFar: 4600,
@@ -57,7 +57,7 @@ export const TOD_PRESETS: Record<Tod, TodPreset> = {
     cityGlow: 0, bridgeGlow: 0, water: '#2b6a82', led: 1.2, exposure: 1.0,
   },
   sunset: {
-    sunDir: [0.35, 0.07, -0.94], sunColor: '#ffad70', sunIntensity: 1.5,
+    sunDir: [-0.42, 0.07, -0.9], sunColor: '#ffad70', sunIntensity: 1.5,
     hemiSky: '#f0b98f', hemiGround: '#6a5a55', hemiIntensity: 0.55,
     ambient: 0.45, ambientColor: '#ffe6cf',
     fog: '#d9a98a', fogNear: 350, fogFar: 4000,

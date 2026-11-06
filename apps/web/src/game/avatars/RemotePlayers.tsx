@@ -113,7 +113,7 @@ function RemoteAvatar({ sid }: { sid: string }) {
   return (
     <>
       <RigidBody ref={body} type="kinematicPosition" colliders={false} position={[0, -50, 0]}>
-        <CapsuleCollider ref={collider} args={[0.55, AVATAR_RADIUS * 0.9]} position={[0, 0.83, 0]} />
+        <CapsuleCollider ref={collider} args={[0.33, AVATAR_RADIUS * 0.9]} position={[0, 0.61, 0]} />
       </RigidBody>
       <primitive object={entity.group} />
     </>

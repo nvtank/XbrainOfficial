@@ -21,6 +21,13 @@ export interface PlayerView {
   joinedAt: number;
 }
 
+export interface AttendanceView {
+  userId: string;
+  name: string;
+  time: number;
+  late: boolean;
+}
+
 interface WorldState {
   selfSid: string | null;
   players: Record<string, PlayerView>;
@@ -33,6 +40,10 @@ interface WorldState {
   stats: StatsMsg | null;
   statsAt: number;
   speaking: Record<string, boolean>;
+  attendance: Record<string, AttendanceView>;
+  attendanceDay: string;
+  activeWeek: number;
+  lateAfter: number;
   set: (patch: Partial<WorldState>) => void;
   reset: () => void;
 }
@@ -49,6 +60,10 @@ const empty = {
   stats: null,
   statsAt: 0,
   speaking: {},
+  attendance: {},
+  attendanceDay: '',
+  activeWeek: 0,
+  lateAfter: 540,
 };
 
 export const useWorld = create<WorldState>((set) => ({

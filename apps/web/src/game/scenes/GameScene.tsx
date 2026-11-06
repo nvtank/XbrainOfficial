@@ -10,6 +10,8 @@ import { Colliders } from '../environment/Colliders';
 import { InteractiveObjects } from '../environment/Interactive';
 import { Lighting } from '../environment/Lighting';
 import { LogoSigns } from '../environment/Logo3D';
+import { AttendanceArea } from '../environment/Attendance';
+import { Decor } from '../environment/Decor';
 import { Outdoor } from '../environment/Outdoor';
 import { useTimeOfDay } from '../environment/timeOfDay';
 import { LocalPlayer } from '../avatars/LocalPlayer';
@@ -70,6 +72,8 @@ export function GameScene({ onReady }: { onReady: () => void }) {
         <Building shadows={shadows} />
         <LogoSigns />
         <InteractiveObjects />
+        <AttendanceArea />
+        <Decor />
         <InteractionSystem />
         <NavGuide />
         <PerfProbe />

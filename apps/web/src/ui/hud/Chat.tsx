@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, Lock, MessageSquare, Send, Smile } from 'lucide-react';
-import { CHAT_MAX_LENGTH, type ChatMsg } from '@xbrain/shared';
+import { CHAT_EMOTE_TRIGGERS, CHAT_MAX_LENGTH, EMOTE_ICONS, EMOTE_LABELS, type ChatMsg, type EmoteName } from '@xbrain/shared';
 import { useChat, type ChatTab } from '../../stores/chat';
 import { useGame } from '../../stores/game';
 import { useWorld } from '../../stores/world';
@@ -87,6 +87,9 @@ export function ChatPanel() {
       if (!privateTo) return useGame.getState().toast('warn', 'Choose who to message first.');
       net.chat({ channel: 'private', text: t, to: privateTo });
     } else net.chat({ channel: tab, text: t });
+    // Chat → expression (e.g. "haha" laughs, "huhu" cries)
+    const trig = CHAT_EMOTE_TRIGGERS.find(([re]) => re.test(t));
+    if (trig) net.emote(trig[1]);
     setText('');
     setEmoji(false);
   };
@@ -132,7 +135,15 @@ export function ChatPanel() {
           <Message key={m.id} m={m} selfSid={selfSid} />
         ))}
       </div>
-      <div className="relative flex items-center gap-1.5 border-t border-white/10 p-2">
+      <div className="flex items-center gap-0.5 border-t border-white/10 px-2 pt-1.5">
+        {(['smile', 'laugh', 'cry', 'sad', 'angry', 'surprised', 'happy', 'wave'] as EmoteName[]).map((e) => (
+          <button key={e} title={EMOTE_LABELS[e]} className="rounded-md px-1 py-0.5 text-base transition hover:scale-125 hover:bg-white/10" onClick={() => net.emote(e)}>
+            {EMOTE_ICONS[e]}
+          </button>
+        ))}
+        <span className="ml-auto text-[10px] text-white/30">express</span>
+      </div>
+      <div className="relative flex items-center gap-1.5 p-2 pt-1">
         <AnimatePresence>
           {emoji && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="glass absolute bottom-12 left-2 grid grid-cols-8 gap-1 p-2">

@@ -54,6 +54,28 @@ export const MATS = {
   whiteboard: std('#fbfbfa', 0.25),
   ceramicWhite: std('#fafafa', 0.3),
   black: std('#111214', 0.6),
+  walnut: std('#4a2e1c', 0.35),
+  walnutLight: std('#7a5034', 0.4),
+  brass: std('#c9a24d', 0.28, 0.9),
+  gold: std('#e0b85a', 0.22, 1),
+  marbleWhite: std('#eeeae4', 0.18, 0.05),
+  marbleDark: std('#2b2a2c', 0.2, 0.1),
+  leatherCream: std('#d9c8ad', 0.45),
+  velvet: std('#284b63', 0.9),
+  ledRed: new THREE.MeshStandardMaterial({ color: '#ff2a2a', emissive: '#ff2020', emissiveIntensity: 2.5, roughness: 1 }),
+  ledBlue: new THREE.MeshStandardMaterial({ color: '#7cc8ff', emissive: '#4fb4ff', emissiveIntensity: 1.6, roughness: 1 }),
+  cctvWhite: std('#f2f3f5', 0.35, 0.1),
+  lens: std('#05070a', 0.05, 0.6),
+  fruitOrange: std('#f7941d', 0.55),
+  fruitRed: std('#c62828', 0.45),
+  fruitGreen: std('#7cb342', 0.5),
+  banana: std('#f4d03f', 0.55),
+  bread: std('#c98a3d', 0.85),
+  snackBlue: std('#1e88e5', 0.5),
+  snackPink: std('#ec407a', 0.5),
+  snackPurple: std('#7e57c2', 0.5),
+  plate: std('#fbfbfb', 0.25),
+  steelDark: std('#55595f', 0.3, 0.8),
 };
 export type MatKey = keyof typeof MATS;
 
@@ -94,7 +116,7 @@ const rnd = (() => {
 })();
 
 /** Texture sizes in meters (one texture repeat). */
-export const FLOOR_TEX_SIZE = { tile: 2.4, carpet: 2, wood: 2.4, kitchenTile: 1.2, meetingCarpet: 2, stone: 2.4 } as const;
+export const FLOOR_TEX_SIZE = { tile: 2.4, carpet: 2, wood: 2.4, kitchenTile: 1.2, meetingCarpet: 2, stone: 2.4, marble: 3.2 } as const;
 
 let floorCache: Record<string, THREE.Texture> | null = null;
 export function floorTextures() {
@@ -209,7 +231,31 @@ export function floorTextures() {
       c.stroke();
     }
   });
-  floorCache = { tile, carpet, wood, kitchenTile, meetingCarpet, stone };
+  const marble = canvasTex(512, (c, s) => {
+    const g = c.createLinearGradient(0, 0, s, s);
+    g.addColorStop(0, '#2a2829');
+    g.addColorStop(1, '#353234');
+    c.fillStyle = g;
+    c.fillRect(0, 0, s, s);
+    for (let i = 0; i < 70; i++) {
+      c.strokeStyle = `rgba(${200 + rnd() * 55},${180 + rnd() * 50},${130 + rnd() * 60},${0.05 + rnd() * 0.18})`;
+      c.lineWidth = 0.5 + rnd() * 1.8;
+      c.beginPath();
+      let x = rnd() * s;
+      let y = rnd() * s;
+      c.moveTo(x, y);
+      for (let k = 0; k < 6; k++) {
+        x += (rnd() - 0.3) * 90;
+        y += (rnd() - 0.5) * 60;
+        c.lineTo(x, y);
+      }
+      c.stroke();
+    }
+    c.strokeStyle = 'rgba(201,162,77,0.55)';
+    c.lineWidth = 2;
+    c.strokeRect(1, 1, s - 2, s - 2);
+  });
+  floorCache = { tile, carpet, wood, kitchenTile, meetingCarpet, stone, marble };
   return floorCache;
 }
 

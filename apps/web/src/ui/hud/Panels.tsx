@@ -344,3 +344,91 @@ export function PointerHint() {
     );
   return null;
 }
+
+/**
+ * Face-ID check-in flow: simulated face scan (camera frame + scan line), then the
+ * server records attendance (idempotent per day) and returns the official time.
+ */
+export function FaceCheckIn() {
+  const st = useGame((s) => s.checkin);
+  const user = useApp((s) => s.user);
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (st.phase !== 'scanning') return;
+    setProgress(0);
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = () => {
+      const p = Math.min(1, (performance.now() - t0) / 1800);
+      setProgress(p);
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else {
+        useGame.getState().set({ checkin: { phase: 'sent' } });
+        net.checkIn();
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [st.phase]);
+  useEffect(() => {
+    if (st.phase === 'sent') {
+      const id = setTimeout(() => useGame.getState().set({ checkin: { phase: 'result', ok: false, reason: 'No response from the attendance server.' } }), 6000);
+      return () => clearTimeout(id);
+    }
+    if (st.phase === 'result') {
+      const id = setTimeout(() => useGame.getState().set({ checkin: { phase: 'idle' } }), 5000);
+      return () => clearTimeout(id);
+    }
+  }, [st.phase]);
+  if (st.phase === 'idle') return null;
+  const close = () => useGame.getState().set({ checkin: { phase: 'idle' } });
+  const a = user?.avatar;
+  const scanning = st.phase === 'scanning' || st.phase === 'sent';
+  return (
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/55 text-white backdrop-blur-sm" onClick={() => !scanning && close()}>
+      <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-[380px] overflow-hidden rounded-3xl border border-white/10 bg-[#0f1621] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between bg-brand px-4 py-2 text-xs font-extrabold tracking-[0.2em] text-black">
+          <span>XBRAIN FACE ID</span>
+          <span className="font-mono">{new Date().toLocaleTimeString('vi-VN')}</span>
+        </div>
+        <div className="flex flex-col items-center p-6">
+          <div className="relative h-[220px] w-[190px]">
+            {/* Stylised chibi face preview made from the player's avatar colours */}
+            <div className="absolute inset-x-6 top-6 h-[150px] rounded-full" style={{ background: a?.skin ?? '#efc3a4' }} />
+            <div className="absolute inset-x-5 top-3 h-[70px] rounded-t-full" style={{ background: a?.hairColor ?? '#222' }} />
+            <div className="absolute left-[58px] top-[92px] h-[26px] w-[20px] rounded-full bg-[#1d1715]" />
+            <div className="absolute right-[58px] top-[92px] h-[26px] w-[20px] rounded-full bg-[#1d1715]" />
+            <div className={`absolute left-1/2 top-[138px] h-[10px] w-[34px] -translate-x-1/2 rounded-b-full ${st.phase === 'result' && st.ok ? 'bg-[#8f3f3a]' : 'bg-[#8f3f3a]/70'}`} />
+            {['left-0 top-0 border-l-4 border-t-4', 'right-0 top-0 border-r-4 border-t-4', 'left-0 bottom-0 border-b-4 border-l-4', 'right-0 bottom-0 border-b-4 border-r-4'].map((c) => (
+              <div key={c} className={`absolute h-10 w-10 rounded-sm border-brand ${c}`} />
+            ))}
+            {scanning && <div className="absolute inset-x-2 h-1 rounded bg-sky-400 shadow-[0_0_18px_6px_rgba(56,189,248,0.6)]" style={{ top: `${10 + ((progress * 3) % 1) * 200}px` }} />}
+          </div>
+          {scanning ? (
+            <>
+              <div className="mt-4 text-lg font-bold text-sky-300">{st.phase === 'sent' ? 'Verifying…' : 'Scanning face…'}</div>
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/10">
+                <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-brand transition-[width]" style={{ width: `${Math.round((st.phase === 'sent' ? 1 : progress) * 100)}%` }} />
+              </div>
+              <div className="mt-2 text-xs text-white/50">Simulated face recognition · no camera image is captured</div>
+            </>
+          ) : st.ok ? (
+            <div className="mt-4 text-center">
+              <div className={`text-xl font-extrabold ${st.late ? 'text-amber-300' : 'text-emerald-300'}`}>{st.already ? 'Already checked in today' : 'Check-in successful'}</div>
+              <div className="mt-1 text-lg font-bold">{st.name}</div>
+              <div className="font-mono text-2xl">{st.time ? new Date(st.time).toLocaleTimeString('vi-VN') : ''}</div>
+              <div className={`mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-bold ${st.late ? 'bg-amber-400/20 text-amber-300' : 'bg-emerald-400/20 text-emerald-300'}`}>{st.late ? 'LATE ARRIVAL' : 'ON TIME'}</div>
+            </div>
+          ) : (
+            <div className="mt-4 text-center text-sm text-red-300">{st.reason ?? 'Check-in failed.'}</div>
+          )}
+          {!scanning && (
+            <button className="btn-ghost mt-5" onClick={close}>
+              Close
+            </button>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}

@@ -9,6 +9,17 @@ export function startOfDay(now = Date.now()): number {
   return d.getTime() - offsetMs();
 }
 
+/** Office-local calendar day key, e.g. "2026-11-06". */
+export function dayKey(now = Date.now()): string {
+  return new Date(now + offsetMs()).toISOString().slice(0, 10);
+}
+
+/** Minutes since local midnight (office timezone). */
+export function localMinutes(now = Date.now()): number {
+  const d = new Date(now + offsetMs());
+  return d.getUTCHours() * 60 + d.getUTCMinutes();
+}
+
 /** Start of the current office-local week (Monday 00:00). */
 export function startOfWeek(now = Date.now()): number {
   const d = new Date(now + offsetMs());

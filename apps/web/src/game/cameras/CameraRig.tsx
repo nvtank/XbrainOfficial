@@ -9,7 +9,7 @@ import { OrbitControls } from '@react-three/drei';
 import { useRapier } from '@react-three/rapier';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import { CAMERA_PRESETS, EYE_HEIGHT, SEAT_BY_ID } from '@xbrain/shared';
+import { AVATAR_HEIGHT, CAMERA_PRESETS, EYE_HEIGHT, SEAT_BY_ID } from '@xbrain/shared';
 import { useGame } from '../../stores/game';
 import { useSettings } from '../../stores/settings';
 import { runtime } from '../runtime';
@@ -66,7 +66,7 @@ export function CameraRig() {
           if (seat && useSettings.getState().autoDeskCamera && s.cameraMode === 'third') {
             st.current.yaw = seat.rotY;
             st.current.pitch = seat.kind === 'desk' ? 0.42 : 0.3;
-            st.current.dist = seat.kind === 'desk' ? 1.9 : 2.6;
+            st.current.dist = seat.kind === 'desk' ? 1.7 : 2.4;
           }
         }
         if (s.seatPhase === 'none' && prev.seatPhase !== 'none' && s.cameraMode === 'third') st.current.dist = Math.max(st.current.dist, 3.6);
@@ -143,14 +143,14 @@ export function CameraRig() {
     const L = runtime.local;
     const s = st.current;
     const m = useGame.getState().cameraMode;
-    const h = runtime.localHeight / 1.72;
+    const h = runtime.localHeight / AVATAR_HEIGHT;
     const seated = useGame.getState().seatPhase === 'seated' || useGame.getState().seatPhase === 'sitting';
     const desiredPos = new THREE.Vector3();
     const desiredTarget = new THREE.Vector3();
 
     if (m === 'third') {
       runtime.camYaw = s.yaw;
-      const head = new THREE.Vector3(L.pos.x, L.pos.y + (seated ? 1.15 : 1.55) * h, L.pos.z);
+      const head = new THREE.Vector3(L.pos.x, L.pos.y + (seated ? 1.25 : 1.08) * h, L.pos.z);
       const f = new THREE.Vector3(Math.sin(s.yaw), 0, Math.cos(s.yaw));
       const dir = new THREE.Vector3(-f.x * Math.cos(s.pitch), Math.sin(s.pitch), -f.z * Math.cos(s.pitch)).normalize();
       let dist = s.dist;
@@ -162,7 +162,7 @@ export function CameraRig() {
       desiredTarget.copy(head).addScaledVector(new THREE.Vector3(-f.z, 0, f.x), 0.0);
     } else if (m === 'first') {
       runtime.camYaw = s.yaw;
-      const eye = (seated ? 1.18 : EYE_HEIGHT) * h;
+      const eye = (seated ? 1.17 : EYE_HEIGHT) * h;
       desiredPos.set(L.pos.x, L.pos.y + eye, L.pos.z).addScaledVector(new THREE.Vector3(Math.sin(s.yaw), 0, Math.cos(s.yaw)), 0.12);
       desiredTarget.copy(desiredPos).add(new THREE.Vector3(Math.sin(s.yaw) * Math.cos(s.pitch), -Math.sin(s.pitch), Math.cos(s.yaw) * Math.cos(s.pitch)));
     } else if (preset && presetDir) {
@@ -205,7 +205,7 @@ export function CameraRig() {
     }
 
     // Spatial-audio listener follows the avatar (not a detached observation camera).
-    runtime.listenerPos.set(L.pos.x, L.pos.y + 1.55 * h, L.pos.z);
+    runtime.listenerPos.set(L.pos.x, L.pos.y + 1.0 * h, L.pos.z);
     camera.getWorldDirection(tmpV);
     if (m === 'overview' || m === 'preset') tmpV.set(Math.sin(L.rotY), 0, Math.cos(L.rotY));
     runtime.listenerForward.copy(tmpV.setY(0).normalize());

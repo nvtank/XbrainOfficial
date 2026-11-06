@@ -7,6 +7,8 @@ export default defineConfig(({ mode }) => {
   const serverUrl = env.VITE_SERVER_URL || `http://localhost:${env.SERVER_PORT || 2567}`;
   return {
     plugins: [react()],
+    // Separate dependency cache when running a second dev stack side by side (e.g. Windows + WSL)
+    cacheDir: process.env.VITE_CACHE_DIR || 'node_modules/.vite',
     envDir: path.resolve(__dirname, '../..'),
     resolve: {
       alias: {
@@ -14,7 +16,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: Number(env.WEB_PORT || 5173),
+      port: Number(env.WEB_PORT || process.env.PORT || 5173),
+      strictPort: false,
       host: true,
       proxy: {
         // Same-origin API in dev (WebSocket goes directly to the game server).

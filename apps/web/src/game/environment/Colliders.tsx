@@ -2,23 +2,26 @@
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { CuboidCollider, RigidBody, type RapierCollider } from '@react-three/rapier';
-import { CEILING_HEIGHT, DOORS, ENTRANCE_DOOR, OBSTACLES, doorClosedRect, type DoorDef } from '@xbrain/shared';
+import { CEILING_HEIGHT, DOORS, ENTRANCE_DOOR, OBSTACLES, doorClosedRect, doorOpenRect, type DoorDef } from '@xbrain/shared';
 import { useWorld } from '../../stores/world';
 import { runtime } from '../runtime';
 
+/** Door leaf collider: blocks the doorway when closed, and the swung-open leaf when open (no walking through glass). */
 function DoorCollider({ d }: { d: DoorDef }) {
-  const ref = useRef<RapierCollider>(null);
+  const closedRef = useRef<RapierCollider>(null);
+  const openRef = useRef<RapierCollider>(null);
   const open = useWorld((s) => (s.objects[d.id] ?? 0) > 0);
-  const r = doorClosedRect(d);
+  const c = doorClosedRect(d);
+  const o = doorOpenRect(d);
   useEffect(() => {
-    ref.current?.setEnabled(!open);
+    closedRef.current?.setEnabled(!open);
+    openRef.current?.setEnabled(open);
   }, [open]);
   return (
-    <CuboidCollider
-      ref={ref}
-      args={[(r.maxX - r.minX) / 2, 1.1, (r.maxZ - r.minZ) / 2]}
-      position={[(r.minX + r.maxX) / 2, 1.1, (r.minZ + r.maxZ) / 2]}
-    />
+    <>
+      <CuboidCollider ref={closedRef} args={[(c.maxX - c.minX) / 2, 1.15, (c.maxZ - c.minZ) / 2]} position={[(c.minX + c.maxX) / 2, 1.15, (c.minZ + c.maxZ) / 2]} />
+      <CuboidCollider ref={openRef} args={[(o.maxX - o.minX) / 2, 1.15, (o.maxZ - o.minZ) / 2]} position={[(o.minX + o.maxX) / 2, 1.15, (o.minZ + o.maxZ) / 2]} />
+    </>
   );
 }
 

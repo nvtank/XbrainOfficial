@@ -26,6 +26,14 @@ export class Player extends Schema {
   @type('number') joinedAt = 0;
 }
 
+/** Today's attendance record (keyed by userId). */
+export class AttendanceEntry extends Schema {
+  @type('string') userId = '';
+  @type('string') name = '';
+  @type('number') time = 0;
+  @type('boolean') late = false;
+}
+
 export class OfficeState extends Schema {
   @type({ map: Player }) players = new MapSchema<Player>();
   /** seatId → sessionId */
@@ -39,4 +47,11 @@ export class OfficeState extends Schema {
   @type('uint8') capacity = 50;
   @type('boolean') allowTeleport = false;
   @type('number') serverStartedAt = 0;
+  /** Face-ID attendance for the current office-local day. */
+  @type({ map: AttendanceEntry }) attendance = new MapSchema<AttendanceEntry>();
+  @type('string') attendanceDay = '';
+  /** Distinct users seen this week (basis for the "absent" figure). */
+  @type('uint16') activeWeek = 0;
+  /** Late threshold, minutes after local midnight. */
+  @type('uint16') lateAfter = 540;
 }

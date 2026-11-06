@@ -14,6 +14,11 @@ const num = (v: string | undefined, def: number) => {
   return v !== undefined && v !== '' && Number.isFinite(n) ? n : def;
 };
 
+function parseHHMM(v: string | undefined, def: number): number {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(v ?? '');
+  return m ? Math.min(23, Number(m[1])) * 60 + Math.min(59, Number(m[2])) : def;
+}
+
 const DEV_SECRET = 'dev-insecure-secret-change-me';
 
 export const config = {
@@ -43,6 +48,8 @@ export const config = {
   chatPersist: bool(process.env.CHAT_PERSIST, false),
   /** 'stop' ends the work session on stand-up; 'pause' keeps today's timer and resumes on the next sit. */
   workStandMode: (process.env.WORK_STAND_MODE === 'pause' ? 'pause' : 'stop') as 'stop' | 'pause',
+  /** Check-ins after this local time (HH:MM) are marked late. */
+  attendanceLateAfter: parseHHMM(process.env.ATTENDANCE_LATE_AFTER, 9 * 60),
   /** Office timezone offset for "today" statistics (minutes). Asia/Ho_Chi_Minh = +420. */
   tzOffsetMinutes: num(process.env.TZ_OFFSET_MINUTES, 420),
   serveWebDir: process.env.SERVE_WEB ?? '',

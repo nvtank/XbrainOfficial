@@ -53,6 +53,17 @@ export interface Store {
   closeDanglingSessions(reason: string): Promise<number>;
   saveChat(data: { officeId: string; channel: string; senderId: string; recipientId?: string; text: string }): Promise<void>;
   addModeration(data: { userId: string; action: string; reason?: string; expiresAt?: Date }): Promise<void>;
+  /** Idempotent daily check-in. Returns the stored record (already=true if it existed). */
+  checkIn(data: { userId: string; officeId: string; day: string; at: Date; late: boolean }): Promise<{ at: Date; late: boolean; already: boolean }>;
+  attendanceForDay(officeId: string, day: string): Promise<AttendanceRecord[]>;
+  activeUsersSince(since: Date): Promise<number>;
+}
+
+export interface AttendanceRecord {
+  userId: string;
+  displayName: string;
+  at: Date;
+  late: boolean;
 }
 
 // ───────────────────────────── Memory store ─────────────────────────────
@@ -63,13 +74,14 @@ interface MemoryData {
   sessions: Record<string, Omit<WorkSessionRecord, 'startedAt' | 'endedAt'> & { startedAt: string; endedAt: string | null }>;
   chats: Array<{ officeId: string; channel: string; senderId: string; recipientId?: string; text: string; createdAt: string }>;
   moderation: Array<{ userId: string; action: string; reason?: string; createdAt: string; expiresAt?: string }>;
+  attendance: Record<string, { userId: string; officeId: string; day: string; at: string; late: boolean }>;
 }
 
 const cuid = () => 'c' + crypto.randomBytes(12).toString('hex');
 
 export class MemoryStore implements Store {
   readonly kind = 'memory' as const;
-  private data: MemoryData = { users: {}, avatars: {}, offices: {}, sessions: {}, chats: [], moderation: [] };
+  private data: MemoryData = { users: {}, avatars: {}, offices: {}, sessions: {}, chats: [], moderation: [], attendance: {} };
   private saveTimer: NodeJS.Timeout | null = null;
 
   constructor(private readonly file: string) {}
@@ -218,6 +230,26 @@ export class MemoryStore implements Store {
     this.data.moderation.push({ ...d, expiresAt: d.expiresAt?.toISOString(), createdAt: new Date().toISOString() });
     this.scheduleSave();
   }
+
+  async checkIn(d: { userId: string; officeId: string; day: string; at: Date; late: boolean }) {
+    this.data.attendance ??= {};
+    const key = `${d.userId}|${d.officeId}|${d.day}`;
+    const hit = this.data.attendance[key];
+    if (hit) return { at: new Date(hit.at), late: hit.late, already: true };
+    this.data.attendance[key] = { userId: d.userId, officeId: d.officeId, day: d.day, at: d.at.toISOString(), late: d.late };
+    this.scheduleSave();
+    return { at: d.at, late: d.late, already: false };
+  }
+
+  async attendanceForDay(officeId: string, day: string) {
+    return Object.values(this.data.attendance ?? {})
+      .filter((a) => a.officeId === officeId && a.day === day)
+      .map((a) => ({ userId: a.userId, displayName: this.data.users[a.userId]?.displayName ?? '?', at: new Date(a.at), late: a.late }));
+  }
+
+  async activeUsersSince(since: Date) {
+    return Object.values(this.data.users).filter((u) => u.lastSeenAt && new Date(u.lastSeenAt) >= since).length;
+  }
 }
 
 // ───────────────────────────── Prisma / PostgreSQL store ─────────────────────────────
@@ -322,6 +354,29 @@ export class PrismaStore implements Store {
 
   async addModeration(d: { userId: string; action: string; reason?: string; expiresAt?: Date }) {
     await this.prisma.moderationAction.create({ data: d });
+  }
+
+  async checkIn(d: { userId: string; officeId: string; day: string; at: Date; late: boolean }) {
+    const where = { userId_officeId_day: { userId: d.userId, officeId: d.officeId, day: d.day } };
+    const hit = await this.prisma.attendance.findUnique({ where });
+    if (hit) return { at: hit.checkedInAt as Date, late: hit.late as boolean, already: true };
+    try {
+      await this.prisma.attendance.create({ data: { userId: d.userId, officeId: d.officeId, day: d.day, checkedInAt: d.at, late: d.late } });
+      return { at: d.at, late: d.late, already: false };
+    } catch {
+      // Unique race: another request created it first.
+      const again = await this.prisma.attendance.findUnique({ where });
+      return { at: again.checkedInAt as Date, late: again.late as boolean, already: true };
+    }
+  }
+
+  async attendanceForDay(officeId: string, day: string) {
+    const rows = await this.prisma.attendance.findMany({ where: { officeId, day }, include: { user: { select: { displayName: true } } }, orderBy: { checkedInAt: 'asc' } });
+    return rows.map((r: AnyPrisma) => ({ userId: r.userId, displayName: r.user.displayName, at: r.checkedInAt, late: r.late }));
+  }
+
+  async activeUsersSince(since: Date) {
+    return (await this.prisma.user.count({ where: { lastSeenAt: { gte: since } } })) as number;
   }
 }
 

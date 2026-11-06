@@ -336,6 +336,39 @@ function PrinterPaper() {
   );
 }
 
+function Microwave() {
+  const f = FURNITURE.find((x) => x.type === 'microwave')!;
+  const active = useTimedActive('microwave', 7000);
+  const glow = useRef<THREE.MeshBasicMaterial>(null!);
+  const plate = useRef<THREE.Mesh>(null!);
+  useFrame(({ clock }) => {
+    const on = active();
+    glow.current.color.set(on ? '#ffcf73' : '#1a1a1a');
+    plate.current.rotation.y = on ? clock.elapsedTime * 2 : plate.current.rotation.y;
+  });
+  return (
+    <group position={[f.x, f.y ?? 0.9, f.z]} rotation={[0, f.rotY, 0]}>
+      <mesh material={MATS.steelDark} position={[0, f.h / 2, 0]} castShadow>
+        <boxGeometry args={[f.w, f.h, f.d]} />
+      </mesh>
+      <mesh position={[-0.05, f.h / 2, f.d / 2 + 0.002]}>
+        <planeGeometry args={[f.w * 0.62, f.h * 0.7]} />
+        <meshBasicMaterial ref={glow} color="#1a1a1a" toneMapped={false} />
+      </mesh>
+      <mesh ref={plate} position={[-0.05, 0.03, 0.05]}>
+        <cylinderGeometry args={[0.1, 0.1, 0.01, 16]} />
+        <meshStandardMaterial color="#ddd" />
+      </mesh>
+      <mesh material={MATS.black} position={[f.w / 2 - 0.07, f.h / 2, f.d / 2 + 0.003]}>
+        <planeGeometry args={[0.1, f.h * 0.7]} />
+      </mesh>
+      <mesh material={MATS.ledBlue} position={[f.w / 2 - 0.07, f.h * 0.75, f.d / 2 + 0.005]}>
+        <planeGeometry args={[0.07, 0.025]} />
+      </mesh>
+    </group>
+  );
+}
+
 function DirectorLamp() {
   const f = FURNITURE.find((x) => x.type === 'floorLamp')!;
   const on = useObj('lamp-director') > 0;
@@ -610,7 +643,7 @@ function MonitorScreens() {
     list.push({ seatId: 'S-R-1', pos: place(rec.x, rec.z, rec.rotY, -0.8, 1.05, -0.02 - 0.017), rotY: rec.rotY + Math.PI, w: 0.52, h: 0.29 });
     list.push({ seatId: 'S-R-2', pos: place(rec.x, rec.z, rec.rotY, 0.8, 1.05, -0.02 - 0.017), rotY: rec.rotY + Math.PI, w: 0.52, h: 0.29 });
     const dir = FURNITURE.find((f) => f.type === 'directorDesk')!;
-    list.push({ seatId: 'S-DIR', pos: place(dir.x, dir.z, dir.rotY, 0.2, 1.1, 0.13 - 0.019), rotY: dir.rotY + Math.PI, w: 0.66, h: 0.37 });
+    list.push({ seatId: 'S-DIR', pos: place(dir.x, dir.z, dir.rotY, 0.3, 1.185, 0.17 - 0.0135), rotY: dir.rotY + Math.PI, w: 0.74, h: 0.42 });
     return list;
   }, []);
   const mesh = useMemo(() => {
@@ -653,6 +686,7 @@ export function InteractiveObjects() {
       <WaterStream />
       <PrinterPaper />
       <DirectorLamp />
+      <Microwave />
       <MeetingTV />
       <Whiteboard />
       <StatusScreens />

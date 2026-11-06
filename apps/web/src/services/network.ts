@@ -2,11 +2,13 @@
 import { Client, type Room } from 'colyseus.js';
 import {
   C2S,
+  EMOTE_DURATION_MS,
   RECONNECT_GRACE_SECONDS,
   S2C,
   SEAT_BY_ID,
   SPEECH_BUBBLE_MS,
   type ChatMsg,
+  type CheckInResultMsg,
   type ChatSendMsg,
   type EmoteMsg,
   type EmoteName,
@@ -39,7 +41,7 @@ class Network {
   private statsTimer: number | null = null;
   private flushScheduled = false;
   private dirtyPlayers = new Set<string>();
-  private dirtyMaps = new Set<'seats' | 'objects' | 'boards'>();
+  private dirtyMaps = new Set<'seats' | 'objects' | 'boards' | 'attendance'>();
   private removed = new Set<string>();
   private pingSeq = 0;
   private pingSent = new Map<number, number>();
@@ -117,7 +119,7 @@ class Network {
       this.scheduleFlush();
       if (sid !== room.sessionId) useChat.getState().system(`${p.name} left the office.`);
     });
-    for (const key of ['seats', 'objects', 'boards'] as const) {
+    for (const key of ['seats', 'objects', 'boards', 'attendance'] as const) {
       const mark = () => {
         this.dirtyMaps.add(key);
         this.scheduleFlush();
@@ -129,6 +131,9 @@ class Network {
     $.listen('capacity', (v: number) => useWorld.getState().set({ capacity: v }));
     $.listen('allowTeleport', (v: boolean) => useWorld.getState().set({ allowTeleport: v }));
     $.listen('officeName', (v: string) => useWorld.getState().set({ officeName: v }));
+    $.listen('activeWeek', (v: number) => useWorld.getState().set({ activeWeek: v }));
+    $.listen('lateAfter', (v: number) => useWorld.getState().set({ lateAfter: v }));
+    $.listen('attendanceDay', (v: string) => useWorld.getState().set({ attendanceDay: v }));
 
     room.onMessage(S2C.Snapshot, (m: SnapshotMsg) => {
       const t = Number(m.t);
@@ -151,7 +156,7 @@ class Network {
     });
     room.onMessage(S2C.Chat, (m: ChatMsg) => this.onChat(m));
     room.onMessage(S2C.Emote, (m: EmoteMsg) => {
-      const until = performance.now() + (m.name === 'dance' ? 6000 : 2400);
+      const until = performance.now() + (EMOTE_DURATION_MS[m.name] ?? 2500);
       if (m.sid === room.sessionId) runtime.local.emote = { name: m.name, until };
       else runtime.remoteEmotes.set(m.sid, { name: m.name, until });
     });
@@ -161,6 +166,11 @@ class Network {
       if (m.code === 'kicked' || m.code === 'replaced') this.leaving = true;
     });
     room.onMessage(S2C.SeatResult, (m: SeatResultMsg) => this.onSeatResult(m));
+    room.onMessage(S2C.CheckInResult, (m: CheckInResultMsg) => {
+      useGame.getState().set({ checkin: { phase: 'result', ...m, time: Number(m.time) } });
+      if (m.ok) sfx.join();
+      else sfx.error();
+    });
     room.onLeave((code: number) => this.onLeave(code));
     room.onError((code: number, message?: string) => console.warn('[net] room error', code, message));
 
@@ -241,8 +251,9 @@ class Network {
       this.removed.clear();
     }
     for (const key of this.dirtyMaps) {
-      const obj: Record<string, never> = {};
-      $[key].forEach((v: never, k: string) => (obj[k] = v));
+      const obj: Record<string, unknown> = {};
+      if (key === 'attendance') $.attendance.forEach((v: AnyState, k: string) => (obj[k] = { userId: v.userId, name: v.name, time: Number(v.time), late: v.late }));
+      else $[key].forEach((v: never, k: string) => (obj[k] = v));
       (patch as Record<string, unknown>)[key] = obj;
     }
     this.dirtyMaps.clear();
@@ -361,6 +372,10 @@ class Network {
 
   whiteboard(id: string, text: string) {
     this.send(C2S.Whiteboard, { id, text });
+  }
+
+  checkIn() {
+    this.send(C2S.CheckIn, {});
   }
 
   teleport(zone: ZoneId) {

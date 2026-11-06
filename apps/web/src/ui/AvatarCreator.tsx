@@ -172,8 +172,8 @@ export function AvatarCreator({ mode }: { mode: 'welcome' | 'edit' }) {
               <Logo className="h-6" />
             </div>
           </div>
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-wrap justify-center gap-1.5 rounded-2xl bg-black/50 p-1.5 backdrop-blur">
-            {(['idle', 'walk', 'wave', 'dance', 'sit'] as PreviewAnim[]).map((a) => (
+          <div className="absolute bottom-4 left-1/2 flex w-[92%] -translate-x-1/2 flex-wrap justify-center gap-1.5 rounded-2xl bg-black/50 p-1.5 backdrop-blur">
+            {(['idle', 'walk', 'sit', 'smile', 'laugh', 'cry', 'angry', 'surprised', 'wave', 'dance'] as PreviewAnim[]).map((a) => (
               <button key={a} className={`chip ${anim === a ? 'chip-on' : ''}`} onClick={() => setAnim(a)}>
                 {a[0].toUpperCase() + a.slice(1)}
               </button>

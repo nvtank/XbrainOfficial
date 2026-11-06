@@ -6,6 +6,24 @@ import { useWorld } from '../../stores/world';
 import { formatHMS, workElapsed } from '../../services/clock';
 import { useTick } from './Toolbar';
 
+function CheckInStatus() {
+  const myId = useWorld((s) => (s.selfSid ? s.players[s.selfSid]?.userId : undefined));
+  const rec = useWorld((s) => (myId ? s.attendance[myId] : undefined));
+  const present = useWorld((s) => Object.keys(s.attendance).length);
+  return (
+    <div className="mt-2 flex items-center justify-between rounded-xl bg-white/5 px-3 py-1.5 text-xs">
+      {rec ? (
+        <span className={rec.late ? 'text-amber-300' : 'text-emerald-300'}>
+          ✓ Checked in {new Date(rec.time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} {rec.late ? '· late' : '· on time'}
+        </span>
+      ) : (
+        <span className="text-white/60">Not checked in — Face ID at reception</span>
+      )}
+      <span className="text-white/40">{present} present</span>
+    </div>
+  );
+}
+
 /** Live office status — every number comes from replicated server state or the server stats message. */
 export function Dashboard() {
   useTick();
@@ -63,6 +81,7 @@ export function Dashboard() {
               <span>Week {formatHMS((stats?.weekMs ?? 0) + Math.max(0, live)).slice(0, 5)}h</span>
             </div>
           </div>
+          <CheckInStatus />
           <div className="mt-2.5">
             <div className="label mb-1">Working now · {desksUsed}/{TOTAL_DESKS} desks in use</div>
             <div className="scrollbar-thin max-h-[160px] space-y-0.5 overflow-y-auto pr-1">

@@ -19,14 +19,15 @@ export const FAR_PLAYER_TICK_DIVISOR = 4;
 export const RECONNECT_GRACE_SECONDS = 45;
 
 export const AVATAR_RADIUS = 0.28;
-export const AVATAR_HEIGHT = 1.72;
+/** Chibi avatar height (big head, small body). */
+export const AVATAR_HEIGHT = 1.23;
 export const WALK_SPEED = 2.6;
 export const RUN_SPEED = 5.6;
 /** Server-side tolerance multiplier for movement validation. */
 export const SPEED_TOLERANCE = 1.45;
 export const JUMP_VELOCITY = 4.2;
 export const GRAVITY = 12;
-export const EYE_HEIGHT = 1.6;
+export const EYE_HEIGHT = 1.0;
 
 export const INTERACT_RANGE = 1.8;
 export const SEAT_RANGE = 2.2;
@@ -71,35 +72,49 @@ export enum AnimCode {
   Turn = 6,
 }
 
-export const EMOTES = ['wave', 'clap', 'thumbsup', 'cheer', 'think', 'bow', 'dance'] as const;
+/**
+ * Emotes = facial expression + optional body animation. The first ten are bound to
+ * keys 1…9, 0. Face and body layers blend independently (walking keeps the face).
+ */
+export const EMOTES = ['smile', 'laugh', 'cry', 'sad', 'angry', 'surprised', 'happy', 'think', 'wave', 'clap', 'greet', 'cheer', 'thumbsup', 'dance'] as const;
 export type EmoteName = (typeof EMOTES)[number];
+export type FaceExpression = 'neutral' | 'smile' | 'laugh' | 'cry' | 'sad' | 'angry' | 'surprised' | 'happy' | 'think' | 'talk';
+export type BodyEmote = 'laugh' | 'cry' | 'sad' | 'angry' | 'surprised' | 'happy' | 'think' | 'wave' | 'clap' | 'bow' | 'cheer' | 'thumbsup' | 'dance';
+
 export const EMOTE_LABELS: Record<EmoteName, string> = {
-  wave: 'Wave',
-  clap: 'Clap',
-  thumbsup: 'Thumbs up',
-  cheer: 'Cheer',
-  think: 'Think',
-  bow: 'Bow',
-  dance: 'Dance',
+  smile: 'Smile', laugh: 'Laugh', cry: 'Cry', sad: 'Sad', angry: 'Angry', surprised: 'Surprised', happy: 'Happy',
+  think: 'Thinking', wave: 'Wave', clap: 'Clap', greet: 'Greet', cheer: 'Cheer', thumbsup: 'Thumbs up', dance: 'Dance',
 };
 export const EMOTE_ICONS: Record<EmoteName, string> = {
-  wave: '👋',
-  clap: '👏',
-  thumbsup: '👍',
-  cheer: '🙌',
-  think: '🤔',
-  bow: '🙇',
-  dance: '💃',
+  smile: '😊', laugh: '😂', cry: '😭', sad: '😢', angry: '😠', surprised: '😮', happy: '😄',
+  think: '🤔', wave: '👋', clap: '👏', greet: '🙇', cheer: '🙌', thumbsup: '👍', dance: '💃',
+};
+export const EMOTE_FACE: Record<EmoteName, FaceExpression> = {
+  smile: 'smile', laugh: 'laugh', cry: 'cry', sad: 'sad', angry: 'angry', surprised: 'surprised', happy: 'happy',
+  think: 'think', wave: 'smile', clap: 'happy', greet: 'smile', cheer: 'happy', thumbsup: 'smile', dance: 'happy',
+};
+export const EMOTE_BODY: Record<EmoteName, BodyEmote | null> = {
+  smile: null, laugh: 'laugh', cry: 'cry', sad: 'sad', angry: 'angry', surprised: 'surprised', happy: 'happy',
+  think: 'think', wave: 'wave', clap: 'clap', greet: 'bow', cheer: 'cheer', thumbsup: 'thumbsup', dance: 'dance',
 };
 export const EMOTE_DURATION_MS: Record<EmoteName, number> = {
-  wave: 2400,
-  clap: 2400,
-  thumbsup: 1800,
-  cheer: 2200,
-  think: 3000,
-  bow: 2000,
-  dance: 6000,
+  smile: 4000, laugh: 3600, cry: 4600, sad: 4200, angry: 3600, surprised: 2600, happy: 3600,
+  think: 4000, wave: 2400, clap: 2600, greet: 2100, cheer: 2600, thumbsup: 2200, dance: 6000,
 };
+/** Keyboard shortcuts: Digit1 … Digit0 → the first ten emotes. */
+export const EMOTE_HOTKEYS: Array<[string, EmoteName]> = EMOTES.slice(0, 10).map((e, i) => [`Digit${(i + 1) % 10}`, e]);
+
+/** Simple chat text → expression triggers (e.g. "haha" makes you laugh). */
+export const CHAT_EMOTE_TRIGGERS: Array<[RegExp, EmoteName]> = [
+  [/(haha|hihi|kkk|lol|:d|xd|😂|🤣)/i, 'laugh'],
+  [/(t_t|;\(|:'\(|😭|huhu)/i, 'cry'],
+  [/(:\(|😢|buồn)/i, 'sad'],
+  [/(😠|😡|grr|>:\()/i, 'angry'],
+  [/(wow|😮|😲|omg)/i, 'surprised'],
+  [/(:\)|😊|🙂)/i, 'smile'],
+  [/(🤔|hmm)/i, 'think'],
+  [/(👋|hello|xin chào|chào)/i, 'wave'],
+];
 
 export const BRAND = {
   orange: '#F7941D',

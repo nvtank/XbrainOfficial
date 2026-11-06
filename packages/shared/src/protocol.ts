@@ -18,6 +18,7 @@ export const C2S = {
   MyStats: 'mystats',
   Teleport: 'teleport',
   AvatarUpdated: 'avatarUpdated',
+  CheckIn: 'checkin',
 } as const;
 
 /** Server → client message names. */
@@ -31,6 +32,7 @@ export const S2C = {
   Notice: 'notice',
   SeatResult: 'seatResult',
   Teleported: 'teleported',
+  CheckInResult: 'checkinResult',
 } as const;
 
 /** Quantized transform: [sessionIndex, x*100, y*100, z*100, rotY*1000, anim]. */
@@ -96,6 +98,25 @@ export interface StatsMsg {
   weekMs: number;
   /** Part of the running timer already counted in todayMs (pause mode carry-over). */
   runningBaseMs: number;
+}
+
+export interface CheckInResultMsg {
+  ok: boolean;
+  /** Already checked in today (time = the first check-in). */
+  already: boolean;
+  name: string;
+  /** Server timestamp of the check-in. */
+  time: number;
+  late: boolean;
+  reason?: string;
+}
+
+/** Kiosk screen content shared with everyone (whiteboard map key "kiosk"). */
+export interface KioskDisplay {
+  name: string;
+  time: number;
+  late: boolean;
+  already: boolean;
 }
 
 export interface InteractMsg {

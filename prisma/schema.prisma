@@ -19,6 +19,7 @@ model User {
   sessions    WorkSession[]
   messages    ChatMessage[]
   moderation  ModerationAction[]
+  attendance  Attendance[]
 }
 
 model AvatarConfig {
@@ -35,6 +36,7 @@ model OfficeInstance {
   createdAt DateTime      @default(now())
   sessions  WorkSession[]
   messages  ChatMessage[]
+  attendance Attendance[]
 }
 
 /// One continuous "sit at a desk and work" session. Doubles as desk usage history.
@@ -81,4 +83,19 @@ model ModerationAction {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+/// Face-ID attendance check-in (one per user per office-local day).
+model Attendance {
+  id          String         @id @default(cuid())
+  userId      String
+  officeId    String
+  day         String // YYYY-MM-DD in the office timezone
+  checkedInAt DateTime
+  late        Boolean        @default(false)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  office      OfficeInstance @relation(fields: [officeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, officeId, day])
+  @@index([officeId, day])
 }

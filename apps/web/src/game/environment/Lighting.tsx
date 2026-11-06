@@ -65,7 +65,7 @@ export function Lighting({ tod, quality }: { tod: Tod; quality: Quality }) {
       {quality !== 'low' && (
         <Environment resolution={128} frames={1} background={false}>
           <Lightformer intensity={tod === 'night' ? 0.6 : 2} form="rect" position={[0, 6, -10]} scale={[20, 20, 1]} rotation={[Math.PI / 2, 0, 0]} />
-          <Lightformer intensity={tod === 'night' ? 0.3 : 1.4} color={tod === 'sunset' ? '#ffb27a' : '#dbe9ff'} form="rect" position={[30, 4, -10]} scale={[40, 8, 1]} rotation={[0, -Math.PI / 2, 0]} />
+          <Lightformer intensity={tod === 'night' ? 0.3 : 1.4} color={tod === 'sunset' ? '#ffb27a' : '#dbe9ff'} form="rect" position={[0, 4, -45]} scale={[40, 8, 1]} />
           <Lightformer intensity={0.5} color="#f7941d" form="ring" position={[-20, 3, 5]} scale={6} />
         </Environment>
       )}

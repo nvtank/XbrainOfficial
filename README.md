@@ -1,6 +1,6 @@
 # XBRAIN VIRTUAL OFFICE — Connect • Work • Collaborate
 
-Văn phòng ảo 3D multiplayer trên trình duyệt, mô phỏng văn phòng **XBrain Đà Nẵng**: tạo nhân vật, đi lại tự do, ngồi vào một trong **50 bàn** để bấm giờ làm việc (đồng hồ chạy theo server), chat, nói chuyện bằng micro theo khoảng cách, họp, pha cà phê, ngắm **cầu Thuận Phước** qua vách kính.
+Văn phòng ảo 3D multiplayer trên trình duyệt, mô phỏng văn phòng **XBrain Đà Nẵng**: tạo nhân vật **chibi** dễ thương, điểm danh bằng **Face ID** (mô phỏng), đi lại tự do, ngồi vào một trong **50 bàn** để bấm giờ làm việc (đồng hồ chạy theo server), chat, nói chuyện bằng micro theo khoảng cách, họp, pha cà phê, ngắm **cầu Thuận Phước** qua vách kính.
 
 | | |
 |---|---|
@@ -16,7 +16,10 @@ Tài liệu kỹ thuật: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (kiến t
 
 ## Tính năng
 
-**Không gian 3D**
+**Không gian 3D** (trần cao 4 m, cầu Thuận Phước nằm **thẳng phía trước** qua vách kính phía bắc, tường bên phải là tường đặc có ốp gỗ & poster)
+- **Điểm danh Face ID** bên trái vách logo lễ tân + **Attendance Dashboard** trên tường: có mặt hôm nay, đang làm việc, online, đi trễ, vắng, danh sách giờ check-in, tiến độ. Lưu bảng `Attendance` (mỗi người 1 lần/ngày, trễ sau `ATTENDANCE_LATE_AFTER`).
+- **10 camera an ninh CCTV** gắn tường (lối vào, lễ tân, 4 góc khu làm việc, hành lang các phòng) — xem được trong menu Camera → Security cameras.
+- Phòng bếp đầy đủ: tủ lạnh, lò vi sóng, máy cà phê, bình nước, kệ đồ ăn vặt (bánh mì, mì ly, nước, giỏ trái cây), đĩa cốc, bàn ăn có đồ ăn. Phòng giám đốc cao cấp: sàn đá cẩm thạch, bàn gỗ óc chó viền đồng, máy kiểu iMac, kệ sách & tủ trưng bày có đèn LED, sofa da, bàn trà đá, đèn chùm, vách ốp gỗ, tranh.
 - Hành lang tòa nhà với **logo XBrain 3D** trên mặt tiền (logo thật được vector hoá & đùn khối, giữ nguyên gradient), cửa kính trượt tự động.
 - Sảnh lễ tân: bàn lễ tân + 2 ghế, **vách đen logo nổi có LED**, lối trái/lối phải, sofa chờ, màn hình chào live.
 - **5 cụm bàn nằm ngang × 10 bàn = 50 chỗ**, mỗi chỗ có ghế, màn hình (sáng khi có người ngồi), bàn phím, chuột.
@@ -24,9 +27,13 @@ Tài liệu kỹ thuật: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (kiến t
 - Vách kính phía đông nhìn ra sông Hàn và **cầu Thuận Phước** (tháp cổng, cáp chính, dây treo, xe chạy, LED đổi màu ban đêm), thành phố, bán đảo Sơn Trà. **Ngày / hoàng hôn / đêm** (tự động theo giờ hoặc chọn tay).
 - Trần đen lộ kỹ thuật với đèn LED, ống PCCC đỏ, quạt treo tường cam — dựa trên ảnh thật của văn phòng.
 
-**Nhân vật & điều khiển**
-- Avatar creator 3 bước: tên → tuỳ chỉnh (dáng người, chiều cao, da, khuôn mặt, kiểu/màu tóc, áo, quần/váy, giày, kính, mũ/tai nghe, râu, thẻ nhân viên XBrain, khuyên tai) → vào văn phòng. 12 preset nam/nữ/trung tính, xem trước 360°, zoom, thử animation. Lưu vào DB.
-- Skeleton 17 xương + SkinnedMesh; animation 2 lớp có blending: idle, walk, run, turn, jump, sit, typing, talk, wave, clap, thumbs-up, cheer, think, bow, dance.
+**Nhân vật chibi & điều khiển**
+- Dáng **chibi** ~2,5 đầu: đầu to, thân tròn kiểu "hạt đậu", tay chân ngắn mập, bàn tay tròn kiểu găng, giày tròn. Thân/tay/chân là các khối liền mạch với **skin pha trộn mềm** nên cử động không lộ khớp.
+- Trang phục chi tiết: sơ mi cổ bẻ + cà vạt cam + hàng cúc, polo có logo, áo thun in chữ X, hoodie có mũ/túi/dây rút/bo gấu, vest mở cổ V + khăn cài túi, quần có thắt lưng khoá vàng & gấu gập, váy xếp ly, giày sneaker/da/boot có đế. Thẻ nhân viên XBrain, kính, mũ, tai nghe, râu, khuyên tai.
+- Avatar creator 3 bước: tên → tuỳ chỉnh → vào văn phòng. 12 preset nam/nữ/trung tính, xem trước 360°, zoom, thử animation & biểu cảm. Lưu vào DB.
+- Skeleton 17 xương thân + 12 xương mặt trong **một** SkinnedMesh; animation **3 lớp** blend độc lập (thân dưới / thân trên / khuôn mặt): idle, walk, run, turn, jump, sit, typing, talk, chớp mắt, mấp máy môi khi nói.
+- **14 biểu cảm/emote** đồng bộ realtime: cười, cười lớn, khóc (có nước mắt), buồn, giận, ngạc nhiên, vui (má hồng, mắt ^ ^), suy nghĩ, vẫy tay, vỗ tay, chào, cổ vũ, like, nhảy — bằng phím **1…9, 0**, menu Emotes, hàng nút cảm xúc trong chat, hoặc gõ "haha"/"huhu" trong chat.
+- **Hướng dẫn khi mới vào game**: 8 bước tương tác (di chuyển, camera, điểm danh, ngồi bàn, biểu cảm, chat/voice…) tự hoàn thành khi làm đúng; mở lại bằng **F1** hoặc nút **?**.
 - Rapier character controller: không xuyên tường/bàn ghế/người khác (tuỳ chọn), tăng/giảm tốc, nhảy, chạy.
 - Camera: **góc nhìn thứ ba (mặc định, tránh xuyên tường)**, thứ nhất (pointer lock), **toàn cảnh** (ẩn trần, xoay/zoom), 8 camera phòng (lễ tân, khu làm việc, phòng họp, bếp, giám đốc, kho, cầu, mặt tiền) với chuyển cảnh mượt.
 
@@ -97,7 +104,8 @@ npm run dev
 | F | Hành động phụ (dùng máy tính, slide tiếp) | C | Đổi góc nhìn / quay về avatar |
 | M | Bản đồ | Enter | Chat |
 | T | Bật/tắt mic | V (giữ) | Push-to-talk |
-| G (+1…7) | Emote | B | Dashboard |
+| 1…9, 0 | Biểu cảm (cười, cười lớn, khóc, buồn, giận, ngạc nhiên, vui, nghĩ, vẫy, vỗ tay) | G | Menu emote |
+| B | Dashboard | F1 / ? | Hướng dẫn & phím tắt |
 | H | Ẩn UI | ` | Performance monitor |
 | Esc | Menu / đóng panel | Chuột kéo / cuộn | Xoay / zoom camera |
 

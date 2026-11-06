@@ -9,6 +9,7 @@ import { CapsuleCollider, RigidBody, useRapier, type RapierCollider, type Rapier
 import * as THREE from 'three';
 import {
   AnimCode,
+  AVATAR_HEIGHT,
   AVATAR_RADIUS,
   CLIENT_SEND_HZ,
   DEFAULT_AVATAR,
@@ -32,7 +33,7 @@ import { formatHMS, workElapsed } from '../../services/clock';
 import { AvatarEntity } from './AvatarEntity';
 import type { Loco } from './animator';
 
-const CAPSULE_HALF = 0.55;
+const CAPSULE_HALF = 0.33;
 
 function dampAngle(a: number, b: number, lambda: number, dt: number) {
   let d = (b - a) % (Math.PI * 2);
@@ -65,7 +66,7 @@ export function LocalPlayer() {
   useEffect(() => entity.setShadow(quality === 'high'), [entity, quality]);
   useEffect(() => () => entity.dispose(), [entity]);
   useEffect(() => {
-    runtime.localHeight = 1.72 * cfg.height;
+    runtime.localHeight = AVATAR_HEIGHT * cfg.height;
   }, [cfg.height]);
 
   const body = useRef<RapierRigidBody>(null);
@@ -231,7 +232,6 @@ export function LocalPlayer() {
       else if (speed > WALK_SPEED * 1.25) loco = 'run';
       else if (speed > 0.3) loco = 'walk';
       else if (turnRate > 2.5) loco = 'turn';
-      if (speed > 0.3 && L.emote) L.emote = null;
     }
     prevRot.current = L.rotY;
     L.speed = speed;
